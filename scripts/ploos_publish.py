@@ -15,6 +15,27 @@ LICENSE="CC-BY-4.0"
 LIFECYCLE_STATES=("draft","candidate","qualified","published","archived")
 LIFECYCLE_TRANSITIONS={"draft":{"candidate"},"candidate":{"draft","qualified"},"qualified":{"draft","published"},"published":{"archived"},"archived":set()}
 
+def isbn13_valid(value):
+    s=str(value).replace("-","").replace(" ","")
+    if len(s)!=13 or not s.isdigit() or not s.startswith(("978","979")): return False
+    total=sum((1 if i%2==0 else 3)*int(d) for i,d in enumerate(s[:12]))
+    return (10-(total%10))%10==int(s[12])
+
+def isbn_registry_validate(path):
+    data=load(path); errors=[]; seen={}
+    if data.get("publisher",{}).get("name")!=PUBLISHER: errors.append("invalid publisher")
+    for i,a in enumerate(data.get("allocations",[])):
+        isbn=a.get("isbn")
+        if not isbn or isbn=="PENDING": errors.append(f"allocation {i}: ISBN must be assigned")
+        elif not isbn13_valid(isbn): errors.append(f"allocation {i}: invalid ISBN-13: {isbn}")
+        elif isbn in seen: errors.append(f"allocation {i}: duplicate ISBN-13: {isbn}")
+        else: seen[isbn]=i
+        for key in ("project","language","product"):
+            if not a.get(key): errors.append(f"allocation {i}: missing {key}")
+    for e in errors: print("ERROR:",e)
+    if errors: return 1
+    print(f"ISBN registry validation OK: {len(seen)} allocations"); return 0
+
 def load(path):
     return yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
 
@@ -395,6 +416,7 @@ def main():
     ap=argparse.ArgumentParser(prog="ploos-publish")
     sub=ap.add_subparsers(dest="cmd",required=True)
     v=sub.add_parser("validate"); v.add_argument("metadata")
+    iv=sub.add_parser("isbn-validate"); iv.add_argument("registry")
     e=sub.add_parser("epubcheck"); e.add_argument("epub")
     m=sub.add_parser("manifest"); m.add_argument("metadata"); m.add_argument("artifacts",nargs="*"); m.add_argument("-o","--output",default="release-manifest.json")
     q=sub.add_parser("qualify"); q.add_argument("metadata"); q.add_argument("--epub",action="append",default=[]); q.add_argument("-o","--output",default="qualification-report.json")
@@ -412,6 +434,7 @@ def main():
     p=sub.add_parser("package"); p.add_argument("metadata"); p.add_argument("config"); p.add_argument("--channel",required=True,choices=["amazon","kobo","apple","google"]); p.add_argument("--language",required=True); p.add_argument("--epub"); p.add_argument("--pdf"); p.add_argument("--cover")
     a=ap.parse_args()
     if a.cmd=="validate": return validate(a.metadata)
+    if a.cmd=="isbn-validate": return isbn_registry_validate(a.registry)
     if a.cmd=="epubcheck": return epubcheck(a.epub)
     if a.cmd=="manifest": return manifest(a.metadata,a.output,a.artifacts)
     if a.cmd=="build": return build(a.config,a.target)
