@@ -20,7 +20,7 @@
 
 ## M2 — publishing operations
 
-**Status: IMPLEMENTED** — all planned M2 capabilities are present in the repository; CI qualification is still required before declaring M2 PASS.
+**Status: PASS** — all planned M2 capabilities are implemented and qualified in GitHub Actions on commit `f6b94986cf81de4d3e4cfeeb000f414e124f2303`.
 
 - [x] Publication lifecycle states
 - [x] Edition/revision management
