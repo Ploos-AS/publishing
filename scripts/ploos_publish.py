@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse, hashlib, json, shutil, subprocess, zipfile
 from pathlib import Path
 import yaml
+from epub_qa import qa_epub
 
 AUTHOR="Per Gustav Ousdal"
 PUBLISHER="Ploos AS"
@@ -76,6 +77,9 @@ def qualify(metadata,epubs,out):
     for epub in epubs:
         basic=epub_basic(epub)
         checks.append({"check":f"epub-container:{epub}","status":"PASS" if not basic else "FAIL","details":basic})
+        if not basic:
+            errors,warnings=qa_epub(epub)
+            checks.append({"check":f"epub-internal-qa:{epub}","status":"PASS" if not errors else "FAIL","details":errors,"warnings":warnings})
     report={"schema_version":1,"project":data.get("project"),"checks":checks}
     report["status"]="PASS" if all(c["status"]=="PASS" for c in checks) else "FAIL"
     Path(out).write_text(json.dumps(report,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
