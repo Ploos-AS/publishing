@@ -77,4 +77,6 @@ publications:
     isbn: PENDING
     status: planned
 
+isbn_pool: []
+
 allocations: []
