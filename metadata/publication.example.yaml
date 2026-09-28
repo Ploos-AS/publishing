@@ -40,3 +40,12 @@ distribution:
   kobo: {enabled: true, product: epub, external_id: null}
   apple_books: {enabled: true, product: epub, external_id: null}
   google_play_books: {enabled: true, product: epub, external_id: null}
+
+legal_deposit:
+  norway:
+    required: true
+    status: pending
+    deposited_at: null
+    method: null
+    reference: null
+    artifacts: []
