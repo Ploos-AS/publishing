@@ -2,12 +2,14 @@
 from __future__ import annotations
 import copy, json, subprocess, sys, tempfile, zipfile
 import yaml
+from PIL import Image
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
 CLI=ROOT/"scripts"/"ploos_publish.py"
 META=ROOT/"tests"/"fixtures"/"publication.yaml"
 PKG=ROOT/"metadata"/"package.example.yaml"
+COVER=ROOT/"metadata"/"cover.example.yaml"
 
 def run(*args,cwd=None):
     return subprocess.run([sys.executable,str(CLI),*map(str,args)],cwd=cwd or ROOT,capture_output=True,text=True)
@@ -39,8 +41,17 @@ def main():
         invalid=policy_td/"invalid-transition.yaml"; invalid.write_text(META.read_text())
         assert run("lifecycle",invalid,"published").returncode!=0
     with tempfile.TemporaryDirectory() as td:
-        td=Path(td); epub=td/"fixture.epub"; cover=td/"cover.jpg"; pdf=td/"fixture.pdf"
-        make_epub(epub); cover.write_bytes(b"fixture-cover"); pdf.write_bytes(b"%PDF-fixture")
+        td=Path(td); epub=td/"fixture.epub"; master=td/"cover-master.jpg"; bad_cover=td/"bad-cover.jpg"; pdf=td/"fixture.pdf"
+        make_epub(epub); pdf.write_bytes(b"%PDF-fixture")
+        Image.new("RGB",(2000,3200)).save(master,"JPEG",quality=95)
+        Image.new("RGB",(400,400)).save(bad_cover,"JPEG",quality=90)
+        assert run("cover-check",master,COVER).returncode==0
+        assert run("cover-check",bad_cover,COVER).returncode!=0
+        covers=td/"covers"
+        assert run("cover-build",master,COVER,"--output-dir",covers).returncode==0
+        for channel in ("amazon","kobo","apple","google"):
+            assert (covers/f"{channel}.jpg").is_file(), channel
+        cover=covers/"amazon.jpg"
         report=td/"qualification.json"
         assert run("qualify",META,"--epub",epub,"-o",report).returncode==0
         assert json.loads(report.read_text())["status"]=="PASS"
