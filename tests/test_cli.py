@@ -103,6 +103,17 @@ def main():
         assert json.loads(catalog_out.read_text())["books"]==[]
         assert run("catalog",META,"-o",catalog_out,"--include-unpublished").returncode==0
         assert len(json.loads(catalog_out.read_text())["books"])==1
+        site=td/"books-site"
+        assert run("books-site",catalog_out,"--output-dir",site).returncode==0
+        assert (site/"index.html").is_file()
+        assert (site/"api"/"books.json").is_file()
+        site_api=json.loads((site/"api"/"books.json").read_text())
+        assert site_api["publisher"]=="Ploos AS" and len(site_api["books"])==1
+        assert "Publishing Fixture" in (site/"index.html").read_text()
+        first_site={str(p.relative_to(site)):hashlib.sha256(p.read_bytes()).hexdigest() for p in site.rglob("*") if p.is_file()}
+        assert run("books-site",catalog_out,"--output-dir",site).returncode==0
+        second_site={str(p.relative_to(site)):hashlib.sha256(p.read_bytes()).hexdigest() for p in site.rglob("*") if p.is_file()}
+        assert first_site==second_site
         deposit_meta=td/"deposit.yaml"; deposit_meta.write_text(META.read_text())
         assert run("legal-deposit",deposit_meta).returncode==0
         assert run("legal-deposit",deposit_meta,"--status","submitted","--write").returncode!=0
