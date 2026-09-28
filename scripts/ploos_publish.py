@@ -207,6 +207,30 @@ def cover_build(image,config,output_dir):
             out.save(dst,format=fmt,**kwargs); print(dst)
     return 0
 
+
+STORE_KEYS={"amazon":"amazon_kdp","kobo":"kobo","apple":"apple_books","google":"google_play_books"}
+
+def store_metadata(metadata,channel,language,output):
+    data=load(metadata); errors=validate_data(data)
+    if errors:
+        for e in errors: print("ERROR:",e)
+        return 1
+    pub=data.get("publications",{}).get(language)
+    if not pub: print("ERROR: unknown publication language:",language); return 1
+    key=STORE_KEYS[channel]; dist=data.get("distribution",{}).get(key,{})
+    if not dist.get("enabled",False): print("ERROR: channel disabled:",channel); return 1
+    product_name=dist.get("product","epub"); product=pub.get("products",{}).get(product_name)
+    if not product: print("ERROR: product not found:",product_name); return 1
+    doc={"schema_version":1,"channel":channel,"project":data.get("project"),
+         "work_id":data.get("work",{}).get("id"),"language":language,
+         "title":pub.get("title"),"author":pub.get("author"),"publisher":pub.get("publisher"),
+         "copyright_holder":pub.get("copyright_holder"),"license":pub.get("license"),
+         "edition":data.get("edition"),"product":product_name,"isbn":product.get("isbn"),
+         "external_id":dist.get("external_id")}
+    out=Path(output); out.parent.mkdir(parents=True,exist_ok=True)
+    out.write_text(json.dumps(doc,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
+    print(out); return 0
+
 def main():
     ap=argparse.ArgumentParser(prog="ploos-publish")
     sub=ap.add_subparsers(dest="cmd",required=True)
@@ -217,6 +241,7 @@ def main():
     b=sub.add_parser("build"); b.add_argument("config"); b.add_argument("--target")
     cc=sub.add_parser("cover-check"); cc.add_argument("image"); cc.add_argument("config")
     cb=sub.add_parser("cover-build"); cb.add_argument("image"); cb.add_argument("config"); cb.add_argument("--output-dir",default="dist/covers")
+    sm=sub.add_parser("store-metadata"); sm.add_argument("metadata"); sm.add_argument("--channel",required=True,choices=STORE_KEYS); sm.add_argument("--language",required=True); sm.add_argument("-o","--output",required=True)
     l=sub.add_parser("lifecycle"); l.add_argument("metadata"); l.add_argument("status",choices=LIFECYCLE_STATES); l.add_argument("--write",action="store_true")
     p=sub.add_parser("package"); p.add_argument("metadata"); p.add_argument("config"); p.add_argument("--channel",required=True,choices=["amazon","kobo","apple","google"]); p.add_argument("--language",required=True); p.add_argument("--epub"); p.add_argument("--pdf"); p.add_argument("--cover")
     a=ap.parse_args()
@@ -226,6 +251,7 @@ def main():
     if a.cmd=="build": return build(a.config,a.target)
     if a.cmd=="cover-check": return cover_check(a.image,a.config)
     if a.cmd=="cover-build": return cover_build(a.image,a.config,a.output_dir)
+    if a.cmd=="store-metadata": return store_metadata(a.metadata,a.channel,a.language,a.output)
     if a.cmd=="lifecycle": return lifecycle(a.metadata,a.status,a.write)
     if a.cmd=="package": return package(a.metadata,a.config,a.channel,a.language,a.epub,a.pdf,a.cover)
     return qualify(a.metadata,a.epub,a.output)
