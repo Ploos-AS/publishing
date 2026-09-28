@@ -25,7 +25,7 @@
 - [x] Cover validation/derivatives
 - [x] Store metadata export
 - [x] Accessibility report
-- [ ] Norwegian legal-deposit tracking
-- [ ] Publication catalog / books.ploos.no feed
+- [x] Norwegian legal-deposit tracking
+- [x] Publication catalog / books.ploos.no feed
 - [ ] ONIX for Books export
 - [ ] Archive/reproducibility audit
