@@ -22,15 +22,30 @@
 
 ## Amazon KDP
 - [ ] EPUB qualified with Kindle Previewer
-- [ ] KDP metadata matches canonical metadata
+- [ ] Metadata matches canonical metadata
 - [ ] Rights/territories and price reviewed
 - [ ] ASIN recorded after publication
 
 ## Kobo
-- [ ] EPUB validated and rendering checked
-- [ ] Kobo metadata matches canonical metadata
+- [ ] EPUB rendering checked
+- [ ] Metadata matches canonical metadata
 - [ ] Rights/territories, DRM and price reviewed
 - [ ] Kobo identifier recorded after publication
+
+## Apple Books
+- [ ] EPUB passes EPUBCheck
+- [ ] Apple Books rendering checked
+- [ ] Metadata matches canonical metadata
+- [ ] Rights/territories and price reviewed
+- [ ] Apple Books identifier recorded after publication
+
+## Google Play Books
+- [ ] EPUB passes EPUBCheck
+- [ ] EPUB rendering checked
+- [ ] Optional PDF checked when supplied
+- [ ] Metadata matches canonical metadata
+- [ ] Rights/territories and price reviewed
+- [ ] Google identifier recorded after publication
 
 ## Archive
 - [ ] Release artifacts checksummed
