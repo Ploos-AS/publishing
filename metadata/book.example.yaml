@@ -1,10 +1,11 @@
 schema_version: 1
 project: EduNumbers
+author: Per Gustav Ousdal
 publisher: Ploos AS
 
 title:
-  nb: Tallsystemer for datateknikk
-  en: Number Systems for Computing
+  nb: Tallsystemer
+  en: Number Systems
 
 subtitle:
   nb: null
@@ -12,10 +13,7 @@ subtitle:
 
 edition: 1
 publication_year: 2026
-
-languages:
-  - nb
-  - en
+languages: [nb, en]
 
 formats:
   web:
@@ -24,17 +22,27 @@ formats:
     isbn:
       nb: PENDING
       en: PENDING
-  kindle:
-    isbn:
-      nb: PENDING
-      en: PENDING
   pdf:
     isbn:
       nb: PENDING
       en: PENDING
 
+distribution:
+  amazon_kdp:
+    enabled: true
+    artifact: epub
+    asin:
+      nb: null
+      en: null
+  kobo:
+    enabled: true
+    artifact: epub
+    product_id:
+      nb: null
+      en: null
+
 copyright:
-  holder: Ploos AS
+  holder: Per Gustav Ousdal
   year: 2026
 
 license:
