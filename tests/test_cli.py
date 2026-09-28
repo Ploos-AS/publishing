@@ -59,6 +59,13 @@ def main():
             assert store_doc["isbn"]=="PENDING"
             assert "external_id" in store_doc
             assert store_doc["external_id"] is None
+        deposit_meta=td/"deposit.yaml"; deposit_meta.write_text(META.read_text())
+        assert run("legal-deposit",deposit_meta).returncode==0
+        assert run("legal-deposit",deposit_meta,"--status","submitted","--write").returncode!=0
+        assert run("legal-deposit",deposit_meta,"--status","submitted","--artifact",pdf,"--method","nb-digital","--reference","fixture-receipt","--write").returncode==0
+        deposit_doc=yaml.safe_load(deposit_meta.read_text())["legal_deposit"]["norway"]
+        assert deposit_doc["status"]=="submitted"
+        assert deposit_doc["artifacts"][0]["sha256"]
         accessibility=td/"accessibility.json"
         assert run("accessibility-report",META,"--epub",epub,"--language","nb","-o",accessibility).returncode==0
         access_doc=json.loads(accessibility.read_text())
