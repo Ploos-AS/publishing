@@ -12,9 +12,9 @@ def run(*args,cwd=None):
     return subprocess.run([sys.executable,str(CLI),*map(str,args)],cwd=cwd or ROOT,capture_output=True,text=True)
 
 def make_epub(path):
-    container='<?xml version="1.0"?><container xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="EPUB/package.opf" media-type="application/oebps-package+xml"/></rootfiles></container>'
-    opf='<?xml version="1.0"?><package xmlns="http://www.idpf.org/2007/opf" version="3.0"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier>fixture</dc:identifier><dc:title>Publishing Fixture</dc:title><dc:language>nb</dc:language></metadata><manifest><item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/></manifest><spine><itemref idref="nav"/></spine></package>'
-    nav='<!doctype html><html xmlns="http://www.w3.org/1999/xhtml" lang="nb"><head><title>Publishing Fixture</title></head><body><nav epub:type="toc" xmlns:epub="http://www.idpf.org/2007/ops"><ol><li><a href="nav.xhtml">Start</a></li></ol></nav><h1>Publishing Fixture</h1></body></html>'
+    container='<?xml version="1.0" encoding="UTF-8"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="EPUB/package.opf" media-type="application/oebps-package+xml"/></rootfiles></container>'
+    opf='<?xml version="1.0" encoding="UTF-8"?><package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="pub-id"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="pub-id">urn:uuid:00000000-0000-0000-0000-000000000001</dc:identifier><dc:title>Publishing Fixture</dc:title><dc:language>nb</dc:language><meta property="dcterms:modified">2026-09-28T00:00:00Z</meta></metadata><manifest><item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/></manifest><spine><itemref idref="nav"/></spine></package>'
+    nav='<?xml version="1.0" encoding="UTF-8"?><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="nb" xml:lang="nb"><head><title>Publishing Fixture</title></head><body><nav epub:type="toc"><h1>Innhold</h1><ol><li><a href="nav.xhtml">Start</a></li></ol></nav><section><h1>Publishing Fixture</h1><p>Minimal EPUB 3 fixture for Ploos Publishing.</p></section></body></html>'
     with zipfile.ZipFile(path,"w") as z:
         z.writestr("mimetype","application/epub+zip",compress_type=zipfile.ZIP_STORED)
         z.writestr("META-INF/container.xml",container)
