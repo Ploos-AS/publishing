@@ -1,0 +1,63 @@
+name: Reusable book release
+on:
+  workflow_call:
+    inputs:
+      metadata:
+        type: string
+        default: publication.yaml
+      build_config:
+        type: string
+        default: ""
+      epub:
+        type: string
+        required: true
+      pdf:
+        type: string
+        default: ""
+      artifact_name:
+        type: string
+        default: publishing-release
+jobs:
+  qualify-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fetch Ploos Publishing
+        uses: actions/checkout@v4
+        with:
+          repository: Ploos-AS/publishing
+          path: .ploos-publishing
+      - run: pip install -r .ploos-publishing/requirements.txt
+      - name: Build publication
+        if: inputs.build_config != ''
+        run: python .ploos-publishing/scripts/ploos_publish.py build "${{ inputs.build_config }}"
+      - name: Validate metadata
+        run: python .ploos-publishing/scripts/ploos_publish.py validate "${{ inputs.metadata }}"
+      - name: Install EPUBCheck
+        run: sudo apt-get update && sudo apt-get install -y epubcheck
+      - name: EPUBCheck
+        run: python .ploos-publishing/scripts/ploos_publish.py epubcheck "${{ inputs.epub }}"
+      - name: Qualify
+        run: python .ploos-publishing/scripts/ploos_publish.py qualify "${{ inputs.metadata }}" --epub "${{ inputs.epub }}" -o qualification-report.json
+      - name: Provenance
+        shell: bash
+        run: |
+          args=(provenance "${{ inputs.metadata }}" --git-commit "${GITHUB_SHA}" --qualification qualification-report.json --artifact "${{ inputs.epub }}" -o provenance.json)
+          if [[ -n "${{ inputs.pdf }}" ]]; then args+=(--artifact "${{ inputs.pdf }}"); fi
+          python .ploos-publishing/scripts/ploos_publish.py "${args[@]}"
+      - name: Verify provenance
+        run: python .ploos-publishing/scripts/ploos_publish.py provenance-verify provenance.json
+      - name: Upload qualified release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact_name }}
+          if-no-files-found: error
+          path: |
+            ${{ inputs.metadata }}
+            ${{ inputs.epub }}
+            ${{ inputs.pdf }}
+            qualification-report.json
+            provenance.json
