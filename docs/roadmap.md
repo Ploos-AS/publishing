@@ -22,7 +22,7 @@
 
 - [x] Publication lifecycle states
 - [x] Edition/revision management
-- [ ] Cover validation/derivatives
+- [x] Cover validation/derivatives
 - [ ] Store metadata export
 - [ ] Accessibility report
 - [ ] Norwegian legal-deposit tracking
