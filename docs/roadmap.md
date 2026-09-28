@@ -10,7 +10,7 @@
 - [x] Metadata validation
 - [x] EPUBCheck integration
 - [x] Link/image/basic accessibility QA
-- [ ] Build command for Web/EPUB/PDF
+- [x] Build command for Web/EPUB/PDF
 - [ ] Store packaging command
 - [x] Full artifact checksums in release manifest
 - [x] Qualification report
