@@ -194,6 +194,9 @@ def build(config,target=None):
 
 def package(metadata,config,channel,language,epub=None,pdf=None,cover=None):
     data=load(metadata); cfg=load(config).get("package",{})
+    state=data.get("lifecycle",{}).get("status","draft")
+    if state not in ("qualified","published"):
+        print(f"ERROR: store packaging requires qualified/published lifecycle, got: {state}"); return 1
     channels=cfg.get("channels",{})
     if channel not in channels:
         print("ERROR: unknown channel:",channel); return 1
