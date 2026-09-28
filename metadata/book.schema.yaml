@@ -3,12 +3,24 @@ $id: "https://github.com/Ploos-AS/publishing/metadata/book.schema.yaml"
 title: Ploos Book Metadata
 type: object
 additionalProperties: true
-required: [schema_version, project, author, publisher, title, edition, languages, formats]
+required: [schema_version, project, author, publisher, title, edition, languages, formats, copyright, license]
 properties:
   schema_version: {type: integer, minimum: 1}
   project: {type: string, minLength: 1}
   author: {const: "Per Gustav Ousdal"}
   publisher: {const: "Ploos AS"}
+  copyright:
+    type: object
+    required: [holder]
+    properties:
+      holder: {const: "Ploos AS"}
+    additionalProperties: true
+  license:
+    type: object
+    required: [documentation]
+    properties:
+      documentation: {const: "CC-BY-4.0"}
+    additionalProperties: true
   title:
     type: object
     minProperties: 1
