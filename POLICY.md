@@ -6,6 +6,15 @@ Version: 0.1-draft
 
 Publisher: **Ploos AS**
 
+Canonical publication identity:
+
+- Author: **Per Gustav Ousdal**
+- Publisher / Forlag: **Ploos AS**
+- Copyright holder: **Ploos AS**
+- License for Ploos-authored publication content: **CC BY 4.0 International** (`CC-BY-4.0`)
+
+Third-party material is excluded from the CC BY 4.0 grant where noted and remains subject to its own copyright and license terms.
+
 This repository is the canonical source for publishing conventions used by Ploos AS book and course projects.
 
 ## Languages
