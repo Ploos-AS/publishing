@@ -1,0 +1,28 @@
+schema_version: 1
+master:
+  formats: [JPEG, PNG]
+  min_width: 1600
+  min_height: 2400
+  aspect_ratio: 0.625
+  aspect_tolerance: 0.03
+channels:
+  amazon:
+    width: 1600
+    height: 2560
+    format: JPEG
+    quality: 92
+  kobo:
+    width: 1600
+    height: 2400
+    format: JPEG
+    quality: 92
+  apple:
+    width: 1600
+    height: 2400
+    format: JPEG
+    quality: 92
+  google:
+    width: 1600
+    height: 2400
+    format: JPEG
+    quality: 92
