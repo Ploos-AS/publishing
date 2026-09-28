@@ -14,7 +14,8 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r requirements.txt
-      - run: python tests/test_cli.py
+      - name: Run M1/M2 end-to-end self-test
+        run: python tests/test_cli.py
       - name: Install EPUBCheck
         run: sudo apt-get update && sudo apt-get install -y epubcheck
       - name: EPUBCheck smoke test
@@ -26,3 +27,12 @@ jobs:
           make_epub("fixture.epub")
           PY
           python scripts/ploos_publish.py epubcheck fixture.epub
+      - name: Record M2 qualification candidate
+        run: |
+          mkdir -p qualification
+          printf '{"schema_version":1,"milestone":"M2","status":"CANDIDATE","commit":"%s","self_test":"PASS","external_epubcheck":"PASS"}\n' "$GITHUB_SHA" > qualification/m2.json
+      - name: Upload M2 qualification evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: publishing-m2-qualification
+          path: qualification/m2.json
