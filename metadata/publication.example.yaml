@@ -4,7 +4,10 @@ work:
   id: edunumbers
 edition:
   number: 1
+  revision: 1
   year: 2026
+lifecycle:
+  status: draft
 publications:
   nb:
     title: Tallsystemer
