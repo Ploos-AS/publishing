@@ -22,19 +22,69 @@ def isbn13_valid(value):
     return (10-(total%10))%10==int(s[12])
 
 def isbn_registry_validate(path):
-    data=load(path); errors=[]; seen={}
+    data=load(path); errors=[]; seen={}; targets={}
     if data.get("publisher",{}).get("name")!=PUBLISHER: errors.append("invalid publisher")
+    pool=data.get("isbn_pool",[])
+    for i,isbn in enumerate(pool):
+        if not isbn13_valid(isbn): errors.append(f"isbn_pool {i}: invalid ISBN-13: {isbn}")
+        elif isbn in seen: errors.append(f"isbn_pool {i}: duplicate ISBN-13: {isbn}")
+        else: seen[isbn]="pool"
     for i,a in enumerate(data.get("allocations",[])):
         isbn=a.get("isbn")
         if not isbn or isbn=="PENDING": errors.append(f"allocation {i}: ISBN must be assigned")
         elif not isbn13_valid(isbn): errors.append(f"allocation {i}: invalid ISBN-13: {isbn}")
-        elif isbn in seen: errors.append(f"allocation {i}: duplicate ISBN-13: {isbn}")
-        else: seen[isbn]=i
-        for key in ("project","language","product"):
-            if not a.get(key): errors.append(f"allocation {i}: missing {key}")
+        elif isbn in seen and seen[isbn]!="pool": errors.append(f"allocation {i}: duplicate ISBN-13: {isbn}")
+        else: seen[isbn]=f"allocation {i}"
+        target=tuple(a.get(k) for k in ("project","language","product"))
+        for key,value in zip(("project","language","product"),target):
+            if not value: errors.append(f"allocation {i}: missing {key}")
+        if all(target):
+            if target in targets: errors.append(f"allocation {i}: duplicate target: {'/'.join(target)}")
+            targets[target]=i
     for e in errors: print("ERROR:",e)
     if errors: return 1
-    print(f"ISBN registry validation OK: {len(seen)} allocations"); return 0
+    print(f"ISBN registry validation OK: {len(data.get('allocations',[]))} allocations, {len(pool)} pool entries"); return 0
+
+def isbn_import(registry,isbn_file,write=False):
+    p=Path(registry); data=load(p)
+    raw=Path(isbn_file).read_text(encoding="utf-8").splitlines()
+    incoming=[line.strip() for line in raw if line.strip() and not line.lstrip().startswith("#")]
+    bad=[x for x in incoming if not isbn13_valid(x)]
+    if bad:
+        for x in bad: print("ERROR: invalid ISBN-13:",x)
+        return 1
+    normalized=[x.replace("-","").replace(" ","") for x in incoming]
+    if len(normalized)!=len(set(normalized)):
+        print("ERROR: duplicate ISBN in import"); return 1
+    allocated={str(a.get("isbn")).replace("-","").replace(" ","") for a in data.get("allocations",[])}
+    pool=[str(x).replace("-","").replace(" ","") for x in data.get("isbn_pool",[])]
+    merged=pool+[x for x in normalized if x not in pool and x not in allocated]
+    print(f"ISBN import: {len(normalized)} supplied, {len(merged)-len(pool)} new")
+    if write:
+        data["isbn_pool"]=merged
+        data.setdefault("publisher",{})["prefix_status"]="assigned"
+        p.write_text(yaml.safe_dump(data,sort_keys=False,allow_unicode=True),encoding="utf-8")
+        print(p)
+    return 0
+
+def isbn_allocate(registry,project,language,product,write=False):
+    p=Path(registry); data=load(p)
+    target=(project,language,product)
+    for a in data.get("allocations",[]):
+        if tuple(a.get(k) for k in ("project","language","product"))==target:
+            print(f"ERROR: target already allocated: {a.get('isbn')}"); return 1
+    allocated={str(a.get("isbn")).replace("-","").replace(" ","") for a in data.get("allocations",[])}
+    available=[str(x).replace("-","").replace(" ","") for x in data.get("isbn_pool",[]) if str(x).replace("-","").replace(" ","") not in allocated]
+    if not available:
+        print("ERROR: no unallocated ISBNs in registry pool"); return 1
+    isbn=available[0]
+    if not isbn13_valid(isbn): print("ERROR: next ISBN in pool is invalid:",isbn); return 1
+    print(f"{project}/{language}/{product} -> {isbn}")
+    if write:
+        data.setdefault("allocations",[]).append({"isbn":isbn,"project":project,"language":language,"product":product})
+        p.write_text(yaml.safe_dump(data,sort_keys=False,allow_unicode=True),encoding="utf-8")
+        print(p)
+    return 0
 
 def load(path):
     return yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
@@ -417,6 +467,8 @@ def main():
     sub=ap.add_subparsers(dest="cmd",required=True)
     v=sub.add_parser("validate"); v.add_argument("metadata")
     iv=sub.add_parser("isbn-validate"); iv.add_argument("registry")
+    ii=sub.add_parser("isbn-import"); ii.add_argument("registry"); ii.add_argument("isbn_file"); ii.add_argument("--write",action="store_true")
+    ia=sub.add_parser("isbn-allocate"); ia.add_argument("registry"); ia.add_argument("--project",required=True); ia.add_argument("--language",required=True); ia.add_argument("--product",required=True); ia.add_argument("--write",action="store_true")
     e=sub.add_parser("epubcheck"); e.add_argument("epub")
     m=sub.add_parser("manifest"); m.add_argument("metadata"); m.add_argument("artifacts",nargs="*"); m.add_argument("-o","--output",default="release-manifest.json")
     q=sub.add_parser("qualify"); q.add_argument("metadata"); q.add_argument("--epub",action="append",default=[]); q.add_argument("-o","--output",default="qualification-report.json")
@@ -435,6 +487,8 @@ def main():
     a=ap.parse_args()
     if a.cmd=="validate": return validate(a.metadata)
     if a.cmd=="isbn-validate": return isbn_registry_validate(a.registry)
+    if a.cmd=="isbn-import": return isbn_import(a.registry,a.isbn_file,a.write)
+    if a.cmd=="isbn-allocate": return isbn_allocate(a.registry,a.project,a.language,a.product,a.write)
     if a.cmd=="epubcheck": return epubcheck(a.epub)
     if a.cmd=="manifest": return manifest(a.metadata,a.output,a.artifacts)
     if a.cmd=="build": return build(a.config,a.target)
