@@ -23,7 +23,7 @@
 - [x] Publication lifecycle states
 - [x] Edition/revision management
 - [x] Cover validation/derivatives
-- [ ] Store metadata export
+- [x] Store metadata export
 - [ ] Accessibility report
 - [ ] Norwegian legal-deposit tracking
 - [ ] Publication catalog / books.ploos.no feed
