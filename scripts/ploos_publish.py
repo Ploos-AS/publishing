@@ -151,6 +151,57 @@ def epubcheck(path):
         return 2
     return subprocess.run([exe,str(path)],check=False).returncode
 
+
+def provenance(metadata,git_commit,qualification,artifacts,output):
+    meta=Path(metadata); qual=Path(qualification)
+    if not meta.is_file(): print("ERROR: metadata not found:",meta); return 1
+    if not qual.is_file(): print("ERROR: qualification report not found:",qual); return 1
+    if len(git_commit)!=40 or any(ch not in "0123456789abcdefABCDEF" for ch in git_commit):
+        print("ERROR: git commit must be a 40-character SHA-1"); return 1
+    try: qdoc=json.loads(qual.read_text(encoding="utf-8"))
+    except Exception as exc: print("ERROR: invalid qualification report:",exc); return 1
+    if qdoc.get("status")!="PASS": print("ERROR: provenance requires PASS qualification"); return 1
+    data=load(meta); records=[]
+    for item in artifacts:
+        p=Path(item)
+        if not p.is_file(): print("ERROR: provenance artifact not found:",p); return 1
+        records.append({"path":str(p),"bytes":p.stat().st_size,"sha256":sha256(p)})
+    records.sort(key=lambda x:x["path"])
+    doc={"schema_version":1,"project":data.get("project"),"work_id":data.get("work",{}).get("id"),
+         "edition":data.get("edition"),"git_commit":git_commit.lower(),
+         "metadata":{"path":str(meta),"bytes":meta.stat().st_size,"sha256":sha256(meta)},
+         "qualification":{"path":str(qual),"bytes":qual.stat().st_size,"sha256":sha256(qual),"status":"PASS"},
+         "artifacts":records}
+    out=Path(output); out.parent.mkdir(parents=True,exist_ok=True)
+    out.write_text(json.dumps(doc,indent=2,ensure_ascii=False,sort_keys=True)+"\n",encoding="utf-8")
+    print(out); return 0
+
+def provenance_verify(manifest_path):
+    p=Path(manifest_path)
+    try: doc=json.loads(p.read_text(encoding="utf-8"))
+    except Exception as exc: print("ERROR: invalid provenance manifest:",exc); return 1
+    failures=[]
+    commit=str(doc.get("git_commit",""))
+    if len(commit)!=40 or any(ch not in "0123456789abcdef" for ch in commit.lower()): failures.append("invalid git_commit")
+    records=[("metadata",doc.get("metadata",{})),("qualification",doc.get("qualification",{}))]
+    records += [(f"artifact:{r.get('path')}",r) for r in doc.get("artifacts",[])]
+    for label,record in records:
+        fp=Path(record.get("path",""))
+        if not fp.is_file(): failures.append(f"{label}: missing {fp}"); continue
+        if fp.stat().st_size!=record.get("bytes"): failures.append(f"{label}: size mismatch")
+        if sha256(fp)!=record.get("sha256"): failures.append(f"{label}: sha256 mismatch")
+    q=doc.get("qualification",{})
+    if q.get("status")!="PASS": failures.append("qualification: status is not PASS")
+    else:
+        try:
+            live=json.loads(Path(q.get("path","")).read_text(encoding="utf-8"))
+            if live.get("status")!="PASS": failures.append("qualification: live report is not PASS")
+        except Exception as exc: failures.append(f"qualification: unreadable report: {exc}")
+    for failure in failures: print("ERROR:",failure)
+    if failures: return 1
+    print(f"Provenance verification PASS: {len(records)} files, commit {commit}"); return 0
+
+
 def manifest(metadata,out,artifacts):
     p=Path(metadata); data=load(p)
     doc={"schema_version":1,"project":data.get("project"),"metadata":{"path":str(p),"sha256":sha256(p)},"artifacts":[]}
@@ -550,6 +601,8 @@ def main():
     ia=sub.add_parser("isbn-allocate"); ia.add_argument("registry"); ia.add_argument("--project",required=True); ia.add_argument("--language",required=True); ia.add_argument("--product",required=True); ia.add_argument("--write",action="store_true")
     e=sub.add_parser("epubcheck"); e.add_argument("epub")
     m=sub.add_parser("manifest"); m.add_argument("metadata"); m.add_argument("artifacts",nargs="*"); m.add_argument("-o","--output",default="release-manifest.json")
+    pr=sub.add_parser("provenance"); pr.add_argument("metadata"); pr.add_argument("--git-commit",required=True); pr.add_argument("--qualification",required=True); pr.add_argument("--artifact",action="append",default=[]); pr.add_argument("-o","--output",default="provenance.json")
+    pv=sub.add_parser("provenance-verify"); pv.add_argument("manifest")
     q=sub.add_parser("qualify"); q.add_argument("metadata"); q.add_argument("--epub",action="append",default=[]); q.add_argument("-o","--output",default="qualification-report.json")
     b=sub.add_parser("build"); b.add_argument("config"); b.add_argument("--target")
     cc=sub.add_parser("cover-check"); cc.add_argument("image"); cc.add_argument("config")
@@ -572,6 +625,8 @@ def main():
     if a.cmd=="isbn-allocate": return isbn_allocate(a.registry,a.project,a.language,a.product,a.write)
     if a.cmd=="epubcheck": return epubcheck(a.epub)
     if a.cmd=="manifest": return manifest(a.metadata,a.output,a.artifacts)
+    if a.cmd=="provenance": return provenance(a.metadata,a.git_commit,a.qualification,a.artifact,a.output)
+    if a.cmd=="provenance-verify": return provenance_verify(a.manifest)
     if a.cmd=="build": return build(a.config,a.target)
     if a.cmd=="cover-check": return cover_check(a.image,a.config)
     if a.cmd=="cover-build": return cover_build(a.image,a.config,a.output_dir)
