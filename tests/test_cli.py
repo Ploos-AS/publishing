@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import copy, json, subprocess, sys, tempfile, zipfile
+import copy, hashlib, json, subprocess, sys, tempfile, zipfile
 import yaml
 from PIL import Image
 from pathlib import Path
@@ -143,6 +143,11 @@ def main():
         package=td/"packages"/"amazon"/"nb"
         assert (package/"metadata.json").is_file()
         assert len(json.loads((package/"manifest.json").read_text())["artifacts"])==2
+        first={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in package.iterdir() if p.is_file()}
+        assert run("package",published_meta,cfg,"--channel","amazon","--language","nb","--epub",epub,"--cover",cover).returncode==0
+        second={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in package.iterdir() if p.is_file()}
+        assert first==second
+        assert all(int(p.stat().st_mtime)==0 for p in package.iterdir() if p.is_file())
     print("Publishing M1/M2/M3 self-test PASS")
     return 0
 
