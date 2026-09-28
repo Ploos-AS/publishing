@@ -2,6 +2,8 @@
 
 ## M1 — reproducible publishing foundation
 
+**Status: PASS** — qualified on GitHub Actions with metadata validation, end-to-end self-test and external EPUBCheck (2026-09-28, commit `aa7a23f`).
+
 - [x] Canonical author/publisher
 - [x] Project -> Work -> Edition -> Publication -> Product -> Distribution model
 - [x] Amazon KDP, Kobo, Apple Books and Google Play Books channel profiles
