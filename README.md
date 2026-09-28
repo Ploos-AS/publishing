@@ -17,6 +17,7 @@ This repository is the canonical source for:
 - language and format conventions
 - CI validation rules for book repositories
 - release/publication checklists
+- the cross-project `PLOOS-PROJECT-1` lifecycle and integration standard
 
 ## Initial format policy
 
@@ -45,6 +46,14 @@ publishing/
 └── templates/
     └── colophon.md
 ```
+
+## Ploos project standard
+
+Ploos AS projects should adopt [PLOOS-PROJECT-1](standards/PLOOS-PROJECT-1.md). It defines the shared capability-based lifecycle:
+
+`source -> validate -> test -> qualify -> build -> publish -> release`
+
+Qualification is delegated to stable `Ploos-AS/hardware-ci` workflows where applicable. Publishing policy and reusable production conventions remain canonical here.
 
 ## Canonicality
 
