@@ -59,6 +59,12 @@ def main():
             assert store_doc["isbn"]=="PENDING"
             assert "external_id" in store_doc
             assert store_doc["external_id"] is None
+        accessibility=td/"accessibility.json"
+        assert run("accessibility-report",META,"--epub",epub,"--language","nb","-o",accessibility).returncode==0
+        access_doc=json.loads(accessibility.read_text())
+        assert access_doc["status"]=="PASS"
+        assert access_doc["summary"]=={"errors":0,"warnings":0}
+        assert access_doc["artifact"]["sha256"]
         report=td/"qualification.json"
         assert run("qualify",META,"--epub",epub,"-o",report).returncode==0
         assert json.loads(report.read_text())["status"]=="PASS"
