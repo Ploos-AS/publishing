@@ -1,0 +1,35 @@
+schema_version: 1
+project: EduNumbers
+work:
+  id: edunumbers
+edition:
+  number: 1
+  year: 2026
+publications:
+  nb:
+    title: Tallsystemer
+    author: Per Gustav Ousdal
+    publisher: Ploos AS
+    products:
+      epub:
+        isbn: PENDING
+      pdf:
+        isbn: PENDING
+      web:
+        isbn: null
+  en:
+    title: Number Systems
+    author: Per Gustav Ousdal
+    publisher: Ploos AS
+    products:
+      epub:
+        isbn: PENDING
+      pdf:
+        isbn: PENDING
+      web:
+        isbn: null
+distribution:
+  amazon_kdp: {enabled: true, product: epub}
+  kobo: {enabled: true, product: epub}
+  apple_books: {enabled: true, product: epub}
+  google_play_books: {enabled: true, product: epub}
