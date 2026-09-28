@@ -209,6 +209,34 @@ def cover_build(image,config,output_dir):
 
 
 
+
+LEGAL_DEPOSIT_STATES=("not_required","pending","submitted","confirmed")
+
+def legal_deposit(metadata,status=None,artifacts=None,reference=None,method=None,write=False):
+    p=Path(metadata); data=load(p); node=data.setdefault("legal_deposit",{}).setdefault("norway",{})
+    current=node.get("status","pending" if node.get("required",True) else "not_required")
+    if status is None:
+        print(json.dumps({"required":node.get("required",True),"status":current,"deposited_at":node.get("deposited_at"),
+                          "method":node.get("method"),"reference":node.get("reference"),"artifacts":node.get("artifacts",[])},
+                         indent=2,ensure_ascii=False)); return 0
+    if status not in LEGAL_DEPOSIT_STATES: print("ERROR: invalid legal deposit status:",status); return 1
+    if status in ("submitted","confirmed") and not artifacts and not node.get("artifacts"):
+        print("ERROR: submitted/confirmed legal deposit requires at least one artifact"); return 1
+    records=[]
+    for item in artifacts or []:
+        a=Path(item)
+        if not a.is_file(): print("ERROR: deposit artifact not found:",a); return 1
+        records.append({"path":str(a),"bytes":a.stat().st_size,"sha256":sha256(a)})
+    if write:
+        node["status"]=status
+        if records: node["artifacts"]=records
+        if reference is not None: node["reference"]=reference
+        if method is not None: node["method"]=method
+        p.write_text(yaml.safe_dump(data,sort_keys=False,allow_unicode=True),encoding="utf-8")
+        print(p)
+    else: print(f"{current} -> {status}")
+    return 0
+
 def accessibility_report(metadata,epub,language,output):
     data=load(metadata); pub=data.get("publications",{}).get(language)
     if not pub: print("ERROR: unknown publication language:",language); return 1
@@ -266,6 +294,7 @@ def main():
     b=sub.add_parser("build"); b.add_argument("config"); b.add_argument("--target")
     cc=sub.add_parser("cover-check"); cc.add_argument("image"); cc.add_argument("config")
     cb=sub.add_parser("cover-build"); cb.add_argument("image"); cb.add_argument("config"); cb.add_argument("--output-dir",default="dist/covers")
+    ld=sub.add_parser("legal-deposit"); ld.add_argument("metadata"); ld.add_argument("--status",choices=LEGAL_DEPOSIT_STATES); ld.add_argument("--artifact",action="append",default=[]); ld.add_argument("--reference"); ld.add_argument("--method"); ld.add_argument("--write",action="store_true")
     ar=sub.add_parser("accessibility-report"); ar.add_argument("metadata"); ar.add_argument("--epub",required=True); ar.add_argument("--language",required=True); ar.add_argument("-o","--output",default="accessibility-report.json")
     sm=sub.add_parser("store-metadata"); sm.add_argument("metadata"); sm.add_argument("--channel",required=True,choices=STORE_KEYS); sm.add_argument("--language",required=True); sm.add_argument("-o","--output",required=True)
     l=sub.add_parser("lifecycle"); l.add_argument("metadata"); l.add_argument("status",choices=LIFECYCLE_STATES); l.add_argument("--write",action="store_true")
@@ -277,6 +306,7 @@ def main():
     if a.cmd=="build": return build(a.config,a.target)
     if a.cmd=="cover-check": return cover_check(a.image,a.config)
     if a.cmd=="cover-build": return cover_build(a.image,a.config,a.output_dir)
+    if a.cmd=="legal-deposit": return legal_deposit(a.metadata,a.status,a.artifact,a.reference,a.method,a.write)
     if a.cmd=="accessibility-report": return accessibility_report(a.metadata,a.epub,a.language,a.output)
     if a.cmd=="store-metadata": return store_metadata(a.metadata,a.channel,a.language,a.output)
     if a.cmd=="lifecycle": return lifecycle(a.metadata,a.status,a.write)
