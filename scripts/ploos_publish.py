@@ -86,6 +86,29 @@ def qualify(metadata,epubs,out):
     print(f"{report['status']}: {out}")
     return 0 if report["status"]=="PASS" else 1
 
+def build(config,target=None):
+    data=load(config); spec=data.get("build",{})
+    targets=spec.get("targets",{})
+    selected={target:targets[target]} if target else targets
+    if target and target not in targets:
+        print("ERROR: unknown build target:",target); return 1
+    for command in spec.get("clean",[]):
+        print("+",command)
+        if subprocess.run(command,shell=True,check=False).returncode: return 1
+    for name,item in selected.items():
+        command=item.get("command")
+        if not command:
+            print(f"ERROR: {name}: missing command"); return 1
+        print(f"[{name}] + {command}")
+        if subprocess.run(command,shell=True,check=False).returncode:
+            print(f"ERROR: {name}: build command failed"); return 1
+        missing=[p for p in item.get("outputs",[]) if not Path(p).exists()]
+        if missing:
+            for p in missing: print(f"ERROR: {name}: missing output {p}")
+            return 1
+        print(f"PASS: {name}")
+    return 0
+
 def main():
     ap=argparse.ArgumentParser(prog="ploos-publish")
     sub=ap.add_subparsers(dest="cmd",required=True)
@@ -93,10 +116,12 @@ def main():
     e=sub.add_parser("epubcheck"); e.add_argument("epub")
     m=sub.add_parser("manifest"); m.add_argument("metadata"); m.add_argument("artifacts",nargs="*"); m.add_argument("-o","--output",default="release-manifest.json")
     q=sub.add_parser("qualify"); q.add_argument("metadata"); q.add_argument("--epub",action="append",default=[]); q.add_argument("-o","--output",default="qualification-report.json")
+    b=sub.add_parser("build"); b.add_argument("config"); b.add_argument("--target")
     a=ap.parse_args()
     if a.cmd=="validate": return validate(a.metadata)
     if a.cmd=="epubcheck": return epubcheck(a.epub)
     if a.cmd=="manifest": return manifest(a.metadata,a.output,a.artifacts)
+    if a.cmd=="build": return build(a.config,a.target)
     return qualify(a.metadata,a.epub,a.output)
 
 if __name__=="__main__":
