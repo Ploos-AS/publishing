@@ -1,0 +1,16 @@
+schema_version: 1
+project: PublishingFixture
+work:
+  id: publishing-fixture
+edition:
+  number: 1
+  year: 2026
+publications:
+  nb:
+    title: Publishing Fixture
+    author: Per Gustav Ousdal
+    publisher: Ploos AS
+    products:
+      epub: {isbn: PENDING}
+      pdf: {isbn: PENDING}
+      web: {isbn: null}
