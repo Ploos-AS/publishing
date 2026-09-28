@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Ploos Publishing CLI."""
 from __future__ import annotations
-import argparse, hashlib, json, os, shutil, subprocess, zipfile
+import argparse, hashlib, html, json, os, shutil, subprocess, zipfile
 from xml.etree import ElementTree as ET
 from pathlib import Path
 import yaml
@@ -423,6 +423,41 @@ def catalog(metadata_files,output,include_unpublished=False):
     out.write_text(json.dumps(doc,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
     print(f"{len(books)} publications: {out}"); return 0
 
+
+def books_site(catalog_file,output_dir):
+    src=Path(catalog_file)
+    try: catalog_data=json.loads(src.read_text(encoding="utf-8"))
+    except Exception as exc: print("ERROR: invalid catalog:",exc); return 1
+    books=catalog_data.get("books")
+    if not isinstance(books,list): print("ERROR: catalog missing books array"); return 1
+    root=Path(output_dir)
+    if root.exists(): shutil.rmtree(root)
+    api=root/"api"; api.mkdir(parents=True)
+    api_doc={"schema_version":1,"publisher":catalog_data.get("publisher",PUBLISHER),"books":books}
+    (api/"books.json").write_text(json.dumps(api_doc,indent=2,ensure_ascii=False,sort_keys=True)+"\n",encoding="utf-8")
+    cards=[]
+    for book in books:
+        title=html.escape(str(book.get("title","")))
+        author=html.escape(str(book.get("author","")))
+        lang=html.escape(str(book.get("language","")))
+        edition=book.get("edition") or {}
+        ed=html.escape(str(edition.get("number","")))
+        products=[]
+        for name,product in sorted((book.get("products") or {}).items()):
+            isbn=product.get("isbn")
+            suffix=f" — ISBN {html.escape(str(isbn))}" if isbn and isbn!="PENDING" else ""
+            products.append(f"<li>{html.escape(str(name).upper())}{suffix}</li>")
+        cards.append(f'<article class="book"><h2>{title}</h2><p>{author} · {lang}' + (f" · edition {ed}" if ed else "") + f'</p><ul>{"".join(products)}</ul></article>')
+    page='''<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ploos Books</title><style>body{font-family:system-ui,sans-serif;max-width:72rem;margin:auto;padding:2rem;line-height:1.5}header{border-bottom:1px solid #bbb;margin-bottom:2rem}.book{padding:1rem 0;border-bottom:1px solid #ddd}h1,h2{line-height:1.15}</style></head>
+<body><header><h1>Ploos Books</h1><p>Publications from Ploos AS</p></header><main>'''+"".join(cards)+'''</main></body></html>
+'''
+    (root/"index.html").write_text(page,encoding="utf-8")
+    for p in (root/"index.html",api/"books.json"): os.utime(p,(0,0))
+    print(f"{len(books)} publications: {root}"); return 0
+
+
 LEGAL_DEPOSIT_STATES=("not_required","pending","submitted","confirmed")
 
 def legal_deposit(metadata,status=None,artifacts=None,reference=None,method=None,write=False):
@@ -515,6 +550,7 @@ def main():
     ox=sub.add_parser("onix"); ox.add_argument("metadata"); ox.add_argument("--language",required=True); ox.add_argument("--product",required=True); ox.add_argument("-o","--output",default="onix.xml")
     ov=sub.add_parser("onix-validate"); ov.add_argument("onix")
     cat=sub.add_parser("catalog"); cat.add_argument("metadata",nargs="+"); cat.add_argument("-o","--output",default="catalog.json"); cat.add_argument("--include-unpublished",action="store_true")
+    bs=sub.add_parser("books-site"); bs.add_argument("catalog"); bs.add_argument("--output-dir",default="dist/books")
     ld=sub.add_parser("legal-deposit"); ld.add_argument("metadata"); ld.add_argument("--status",choices=LEGAL_DEPOSIT_STATES); ld.add_argument("--artifact",action="append",default=[]); ld.add_argument("--reference"); ld.add_argument("--method"); ld.add_argument("--write",action="store_true")
     ar=sub.add_parser("accessibility-report"); ar.add_argument("metadata"); ar.add_argument("--epub",required=True); ar.add_argument("--language",required=True); ar.add_argument("-o","--output",default="accessibility-report.json")
     sm=sub.add_parser("store-metadata"); sm.add_argument("metadata"); sm.add_argument("--channel",required=True,choices=STORE_KEYS); sm.add_argument("--language",required=True); sm.add_argument("-o","--output",required=True)
@@ -535,6 +571,7 @@ def main():
     if a.cmd=="onix": return onix(a.metadata,a.language,a.product,a.output)
     if a.cmd=="onix-validate": return onix_validate_file(a.onix)
     if a.cmd=="catalog": return catalog(a.metadata,a.output,a.include_unpublished)
+    if a.cmd=="books-site": return books_site(a.catalog,a.output_dir)
     if a.cmd=="legal-deposit": return legal_deposit(a.metadata,a.status,a.artifact,a.reference,a.method,a.write)
     if a.cmd=="accessibility-report": return accessibility_report(a.metadata,a.epub,a.language,a.output)
     if a.cmd=="store-metadata": return store_metadata(a.metadata,a.channel,a.language,a.output)
