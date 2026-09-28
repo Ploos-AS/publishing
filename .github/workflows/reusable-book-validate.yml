@@ -6,6 +6,10 @@ on:
         required: false
         type: string
         default: publication.yaml
+      epub:
+        required: false
+        type: string
+        default: ""
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -22,3 +26,18 @@ jobs:
       - run: pip install -r .ploos-publishing/requirements.txt
       - name: Validate publication metadata
         run: python .ploos-publishing/scripts/ploos_publish.py validate "${{ inputs.metadata }}"
+      - name: Install EPUBCheck
+        if: inputs.epub != ''
+        run: sudo apt-get update && sudo apt-get install -y epubcheck
+      - name: Validate EPUB
+        if: inputs.epub != ''
+        run: python .ploos-publishing/scripts/ploos_publish.py epubcheck "${{ inputs.epub }}"
+      - name: Qualification report
+        if: inputs.epub != ''
+        run: python .ploos-publishing/scripts/ploos_publish.py qualify "${{ inputs.metadata }}" --epub "${{ inputs.epub }}"
+      - name: Upload qualification report
+        if: inputs.epub != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: publishing-qualification
+          path: qualification-report.json
