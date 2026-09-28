@@ -10,6 +10,7 @@ CLI=ROOT/"scripts"/"ploos_publish.py"
 META=ROOT/"tests"/"fixtures"/"publication.yaml"
 PKG=ROOT/"metadata"/"package.example.yaml"
 COVER=ROOT/"metadata"/"cover.example.yaml"
+ISBN_REGISTRY=ROOT/"isbn"/"registry.yaml"
 
 def run(*args,cwd=None):
     return subprocess.run([sys.executable,str(CLI),*map(str,args)],cwd=cwd or ROOT,capture_output=True,text=True)
@@ -26,6 +27,19 @@ def make_epub(path):
 
 def main():
     assert run("validate",META).returncode==0
+    assert run("isbn-validate",ISBN_REGISTRY).returncode==0
+    with tempfile.TemporaryDirectory() as isbn_td:
+        isbn_td=Path(isbn_td)
+        valid=yaml.safe_load(ISBN_REGISTRY.read_text())
+        valid["allocations"]=[{"isbn":"9780000000002","project":"Fixture","language":"nb","product":"epub"}]
+        valid_path=isbn_td/"valid.yaml"; valid_path.write_text(yaml.safe_dump(valid,sort_keys=False,allow_unicode=True))
+        assert run("isbn-validate",valid_path).returncode==0
+        bad=copy.deepcopy(valid); bad["allocations"][0]["isbn"]="9780000000003"
+        bad_path=isbn_td/"bad.yaml"; bad_path.write_text(yaml.safe_dump(bad,sort_keys=False,allow_unicode=True))
+        assert run("isbn-validate",bad_path).returncode!=0
+        dup=copy.deepcopy(valid); dup["allocations"].append(copy.deepcopy(dup["allocations"][0]))
+        dup_path=isbn_td/"duplicate.yaml"; dup_path.write_text(yaml.safe_dump(dup,sort_keys=False,allow_unicode=True))
+        assert run("isbn-validate",dup_path).returncode!=0
     base=yaml.safe_load(META.read_text())
     with tempfile.TemporaryDirectory() as policy_td:
         policy_td=Path(policy_td)
@@ -104,7 +118,7 @@ def main():
         package=td/"packages"/"amazon"/"nb"
         assert (package/"metadata.json").is_file()
         assert len(json.loads((package/"manifest.json").read_text())["artifacts"])==2
-    print("Publishing M1/M2 self-test PASS")
+    print("Publishing M1/M2/M3 self-test PASS")
     return 0
 
 if __name__=="__main__":
