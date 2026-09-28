@@ -31,6 +31,11 @@ jobs:
           repository: Ploos-AS/publishing
           path: .ploos-publishing
       - run: pip install -r .ploos-publishing/requirements.txt
+      - name: Install publication build dependencies
+        if: inputs.build_config != ''
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc texlive-xetex calibre poppler-utils epubcheck
       - name: Build publication
         if: inputs.build_config != ''
         run: python .ploos-publishing/scripts/ploos_publish.py build "${{ inputs.build_config }}"
