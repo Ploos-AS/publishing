@@ -31,15 +31,20 @@ distribution:
   amazon_kdp:
     enabled: true
     artifact: epub
-    asin:
-      nb: null
-      en: null
+    asin: {nb: null, en: null}
   kobo:
     enabled: true
     artifact: epub
-    product_id:
-      nb: null
-      en: null
+    product_id: {nb: null, en: null}
+  apple_books:
+    enabled: true
+    artifact: epub
+    product_id: {nb: null, en: null}
+  google_play_books:
+    enabled: true
+    artifact: epub
+    product_id: {nb: null, en: null}
+    optional_pdf: true
 
 copyright:
   holder: Per Gustav Ousdal
