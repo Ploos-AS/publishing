@@ -8,14 +8,13 @@
 - [x] ISBN registry and product-level allocation policy
 - [x] CLI skeleton
 - [x] Metadata validation
-- [x] Release manifest skeleton
-- [x] Reusable book validation workflow
-- [ ] EPUBCheck integration
+- [x] EPUBCheck integration
 - [ ] Link/image/accessibility QA
 - [ ] Build command for Web/EPUB/PDF
 - [ ] Store packaging command
-- [ ] Full artifact checksums in release manifest
-- [ ] Qualification report
+- [x] Full artifact checksums in release manifest
+- [x] Qualification report
+- [x] Reusable book validation workflow
 
 ## M2 — publishing operations
 
