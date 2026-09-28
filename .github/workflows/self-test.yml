@@ -1,0 +1,27 @@
+name: Publishing self-test
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  self-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: python tests/test_cli.py
+      - name: Install EPUBCheck
+        run: sudo apt-get update && sudo apt-get install -y epubcheck
+      - name: EPUBCheck smoke test
+        run: |
+          python - <<'PY'
+          import sys
+          sys.path.insert(0, "tests")
+          from test_cli import make_epub
+          make_epub("fixture.epub")
+          PY
+          python scripts/ploos_publish.py epubcheck fixture.epub
