@@ -8,6 +8,8 @@ from epub_qa import qa_epub
 
 AUTHOR="Per Gustav Ousdal"
 PUBLISHER="Ploos AS"
+COPYRIGHT_HOLDER="Ploos AS"
+LICENSE="CC-BY-4.0"
 LIFECYCLE_STATES=("draft","candidate","qualified","published","archived")
 LIFECYCLE_TRANSITIONS={"draft":{"candidate"},"candidate":{"draft","qualified"},"qualified":{"draft","published"},"published":{"archived"},"archived":set()}
 
@@ -30,6 +32,8 @@ def validate_data(data):
     for lang,pub in pubs.items():
         if pub.get("author")!=AUTHOR: errors.append(f"{lang}: invalid author")
         if pub.get("publisher")!=PUBLISHER: errors.append(f"{lang}: invalid publisher")
+        if pub.get("copyright_holder")!=COPYRIGHT_HOLDER: errors.append(f"{lang}: invalid copyright holder")
+        if pub.get("license")!=LICENSE: errors.append(f"{lang}: invalid license")
         if not pub.get("title"): errors.append(f"{lang}: missing title")
         for fmt,product in pub.get("products",{}).items():
             if fmt!="web" and "isbn" not in product: errors.append(f"{lang}/{fmt}: missing isbn")
@@ -142,6 +146,7 @@ def package(metadata,config,channel,language,epub=None,pdf=None,cover=None):
         copied.append({"kind":kind,"file":dst.name,"bytes":dst.stat().st_size,"sha256":sha256(dst)})
     meta={"project":data.get("project"),"language":language,"channel":channel,
           "title":pub.get("title"),"author":pub.get("author"),"publisher":pub.get("publisher"),
+          "copyright_holder":pub.get("copyright_holder"),"license":pub.get("license"),
           "edition":data.get("edition"),"products":pub.get("products",{})}
     (root/"metadata.json").write_text(json.dumps(meta,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
     package_manifest={"schema_version":1,"channel":channel,"language":language,"artifacts":copied}
