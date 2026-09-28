@@ -88,6 +88,13 @@ def main():
         report=td/"qualification.json"
         assert run("qualify",META,"--epub",epub,"-o",report).returncode==0
         assert json.loads(report.read_text())["status"]=="PASS"
+        archive=td/"archive.json"
+        assert run("archive",META,epub,pdf,accessibility,"-o",archive).returncode==0
+        assert run("audit",archive).returncode==0
+        original_pdf=pdf.read_bytes(); pdf.write_bytes(original_pdf+b"-changed")
+        assert run("audit",archive).returncode!=0
+        pdf.write_bytes(original_pdf)
+        assert run("audit",archive).returncode==0
         manifest=td/"release.json"
         assert run("manifest",META,epub,pdf,"-o",manifest).returncode==0
         assert len(json.loads(manifest.read_text())["artifacts"])==2
