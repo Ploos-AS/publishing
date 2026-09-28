@@ -208,6 +208,31 @@ def cover_build(image,config,output_dir):
     return 0
 
 
+
+def accessibility_report(metadata,epub,language,output):
+    data=load(metadata); pub=data.get("publications",{}).get(language)
+    if not pub: print("ERROR: unknown publication language:",language); return 1
+    basic=epub_basic(epub)
+    if basic:
+        errors,warnings=basic,[]
+    else:
+        errors,warnings=qa_epub(epub)
+    checks=[
+        {"id":"epub-structure","status":"FAIL" if basic else "PASS","issues":basic},
+        {"id":"internal-accessibility-qa","status":"FAIL" if errors else ("WARN" if warnings else "PASS"),
+         "issues":errors,"warnings":warnings}
+    ]
+    status="FAIL" if errors else ("WARN" if warnings else "PASS")
+    doc={"schema_version":1,"project":data.get("project"),"work_id":data.get("work",{}).get("id"),
+         "language":language,"title":pub.get("title"),"edition":data.get("edition"),
+         "artifact":{"path":str(epub),"sha256":sha256(epub) if Path(epub).is_file() else None},
+         "status":status,"summary":{"errors":len(errors),"warnings":len(warnings)},"checks":checks,
+         "scope":"Automated internal EPUB accessibility checks; not a complete WCAG/EPUB Accessibility conformance certification."}
+    out=Path(output); out.parent.mkdir(parents=True,exist_ok=True)
+    out.write_text(json.dumps(doc,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
+    print(f"{status}: {out}")
+    return 1 if status=="FAIL" else 0
+
 STORE_KEYS={"amazon":"amazon_kdp","kobo":"kobo","apple":"apple_books","google":"google_play_books"}
 
 def store_metadata(metadata,channel,language,output):
@@ -241,6 +266,7 @@ def main():
     b=sub.add_parser("build"); b.add_argument("config"); b.add_argument("--target")
     cc=sub.add_parser("cover-check"); cc.add_argument("image"); cc.add_argument("config")
     cb=sub.add_parser("cover-build"); cb.add_argument("image"); cb.add_argument("config"); cb.add_argument("--output-dir",default="dist/covers")
+    ar=sub.add_parser("accessibility-report"); ar.add_argument("metadata"); ar.add_argument("--epub",required=True); ar.add_argument("--language",required=True); ar.add_argument("-o","--output",default="accessibility-report.json")
     sm=sub.add_parser("store-metadata"); sm.add_argument("metadata"); sm.add_argument("--channel",required=True,choices=STORE_KEYS); sm.add_argument("--language",required=True); sm.add_argument("-o","--output",required=True)
     l=sub.add_parser("lifecycle"); l.add_argument("metadata"); l.add_argument("status",choices=LIFECYCLE_STATES); l.add_argument("--write",action="store_true")
     p=sub.add_parser("package"); p.add_argument("metadata"); p.add_argument("config"); p.add_argument("--channel",required=True,choices=["amazon","kobo","apple","google"]); p.add_argument("--language",required=True); p.add_argument("--epub"); p.add_argument("--pdf"); p.add_argument("--cover")
@@ -251,6 +277,7 @@ def main():
     if a.cmd=="build": return build(a.config,a.target)
     if a.cmd=="cover-check": return cover_check(a.image,a.config)
     if a.cmd=="cover-build": return cover_build(a.image,a.config,a.output_dir)
+    if a.cmd=="accessibility-report": return accessibility_report(a.metadata,a.epub,a.language,a.output)
     if a.cmd=="store-metadata": return store_metadata(a.metadata,a.channel,a.language,a.output)
     if a.cmd=="lifecycle": return lifecycle(a.metadata,a.status,a.write)
     if a.cmd=="package": return package(a.metadata,a.config,a.channel,a.language,a.epub,a.pdf,a.cover)
