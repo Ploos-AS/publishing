@@ -1,0 +1,23 @@
+schema_version: 1
+publisher:
+  name: Ploos AS
+  country: NO
+  isbn_agency: ISBN Norway / National Library of Norway
+  prefix_status: pending
+  publisher_prefix: null
+
+policy:
+  placeholder: PENDING
+  allow_realistic_placeholders: false
+  canonical_registry: true
+
+allocations: []
+
+# Example allocation to add only after official ISBN assignment:
+# - project: EduNumbers
+#   title: Tallsystemer for datateknikk
+#   language: nb
+#   format: epub
+#   edition: 1
+#   isbn: "978-82-..."
+#   status: assigned
