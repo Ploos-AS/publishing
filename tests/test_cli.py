@@ -94,6 +94,10 @@ def main():
         assert run("onix",onix_meta,"--language","nb","--product","epub","-o",onix_out).returncode==0
         onix_text=onix_out.read_text()
         assert 'release="3.0"' in onix_text and "9780000000002" in onix_text
+        assert "<ProductFormDetail>E101</ProductFormDetail>" in onix_text
+        assert run("onix-validate",onix_out).returncode==0
+        broken_onix=td/"broken-onix.xml"; broken_onix.write_text(onix_text.replace("9780000000002","9780000000003"))
+        assert run("onix-validate",broken_onix).returncode!=0
         catalog_out=td/"catalog.json"
         assert run("catalog",META,"-o",catalog_out).returncode==0
         assert json.loads(catalog_out.read_text())["books"]==[]
