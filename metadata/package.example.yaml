@@ -1,0 +1,13 @@
+schema_version: 1
+package:
+  output_dir: packages
+  channels:
+    amazon:
+      artifacts: [epub, cover]
+    kobo:
+      artifacts: [epub, cover]
+    apple:
+      artifacts: [epub, cover]
+    google:
+      artifacts: [epub, cover]
+      optional_artifacts: [pdf]
