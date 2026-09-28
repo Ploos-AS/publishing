@@ -1,0 +1,91 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://github.com/Ploos-AS/publishing/metadata/book.schema.yaml"
+title: Ploos Book Metadata
+type: object
+additionalProperties: true
+required:
+  - schema_version
+  - project
+  - publisher
+  - title
+  - edition
+  - languages
+  - formats
+properties:
+  schema_version:
+    type: integer
+    minimum: 1
+  project:
+    type: string
+    minLength: 1
+  publisher:
+    const: Ploos AS
+  title:
+    type: object
+    minProperties: 1
+    additionalProperties:
+      type: string
+      minLength: 1
+  subtitle:
+    type: object
+    additionalProperties:
+      type: [string, "null"]
+  edition:
+    oneOf:
+      - type: integer
+        minimum: 1
+      - type: string
+        minLength: 1
+  publication_year:
+    type: integer
+    minimum: 2020
+  languages:
+    type: array
+    minItems: 1
+    uniqueItems: true
+    items:
+      enum: [nb, en]
+  formats:
+    type: object
+    properties:
+      web:
+        $ref: "#/$defs/nonIsbnFormat"
+      epub:
+        $ref: "#/$defs/isbnFormat"
+      kindle:
+        $ref: "#/$defs/isbnFormat"
+      pdf:
+        $ref: "#/$defs/isbnFormat"
+    additionalProperties: false
+  copyright:
+    type: object
+    properties:
+      holder:
+        type: string
+      year:
+        type: integer
+  license:
+    type: object
+  source:
+    type: object
+$defs:
+  isbnValue:
+    oneOf:
+      - const: PENDING
+      - type: string
+        pattern: "^97[89]-?[0-9-]+$"
+  isbnFormat:
+    type: object
+    required: [isbn]
+    properties:
+      isbn:
+        type: object
+        additionalProperties:
+          $ref: "#/$defs/isbnValue"
+    additionalProperties: true
+  nonIsbnFormat:
+    type: object
+    properties:
+      isbn:
+        type: "null"
+    additionalProperties: true
