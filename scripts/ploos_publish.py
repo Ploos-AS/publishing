@@ -210,6 +210,29 @@ def cover_build(image,config,output_dir):
 
 
 
+
+def catalog(metadata_files,output,include_unpublished=False):
+    books=[]
+    for metadata in metadata_files:
+        data=load(metadata); errors=validate_data(data)
+        if errors:
+            print(f"ERROR: invalid metadata: {metadata}"); return 1
+        state=data.get("lifecycle",{}).get("status","draft")
+        if state!="published" and not include_unpublished: continue
+        for language,pub in data.get("publications",{}).items():
+            products={}
+            for name,product in pub.get("products",{}).items():
+                products[name]={"isbn":product.get("isbn")}
+            books.append({"project":data.get("project"),"work_id":data.get("work",{}).get("id"),
+                          "language":language,"title":pub.get("title"),"author":pub.get("author"),
+                          "publisher":pub.get("publisher"),"edition":data.get("edition"),
+                          "lifecycle":state,"products":products})
+    books.sort(key=lambda x:(x["title"].casefold(),x["language"]))
+    doc={"schema_version":1,"publisher":PUBLISHER,"books":books}
+    out=Path(output); out.parent.mkdir(parents=True,exist_ok=True)
+    out.write_text(json.dumps(doc,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
+    print(f"{len(books)} publications: {out}"); return 0
+
 LEGAL_DEPOSIT_STATES=("not_required","pending","submitted","confirmed")
 
 def legal_deposit(metadata,status=None,artifacts=None,reference=None,method=None,write=False):
@@ -294,6 +317,7 @@ def main():
     b=sub.add_parser("build"); b.add_argument("config"); b.add_argument("--target")
     cc=sub.add_parser("cover-check"); cc.add_argument("image"); cc.add_argument("config")
     cb=sub.add_parser("cover-build"); cb.add_argument("image"); cb.add_argument("config"); cb.add_argument("--output-dir",default="dist/covers")
+    cat=sub.add_parser("catalog"); cat.add_argument("metadata",nargs="+"); cat.add_argument("-o","--output",default="catalog.json"); cat.add_argument("--include-unpublished",action="store_true")
     ld=sub.add_parser("legal-deposit"); ld.add_argument("metadata"); ld.add_argument("--status",choices=LEGAL_DEPOSIT_STATES); ld.add_argument("--artifact",action="append",default=[]); ld.add_argument("--reference"); ld.add_argument("--method"); ld.add_argument("--write",action="store_true")
     ar=sub.add_parser("accessibility-report"); ar.add_argument("metadata"); ar.add_argument("--epub",required=True); ar.add_argument("--language",required=True); ar.add_argument("-o","--output",default="accessibility-report.json")
     sm=sub.add_parser("store-metadata"); sm.add_argument("metadata"); sm.add_argument("--channel",required=True,choices=STORE_KEYS); sm.add_argument("--language",required=True); sm.add_argument("-o","--output",required=True)
@@ -306,6 +330,7 @@ def main():
     if a.cmd=="build": return build(a.config,a.target)
     if a.cmd=="cover-check": return cover_check(a.image,a.config)
     if a.cmd=="cover-build": return cover_build(a.image,a.config,a.output_dir)
+    if a.cmd=="catalog": return catalog(a.metadata,a.output,a.include_unpublished)
     if a.cmd=="legal-deposit": return legal_deposit(a.metadata,a.status,a.artifact,a.reference,a.method,a.write)
     if a.cmd=="accessibility-report": return accessibility_report(a.metadata,a.epub,a.language,a.output)
     if a.cmd=="store-metadata": return store_metadata(a.metadata,a.channel,a.language,a.output)
