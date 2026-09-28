@@ -131,9 +131,15 @@ def package(metadata,config,channel,language,epub=None,pdf=None,cover=None):
     supplied={"epub":epub,"pdf":pdf,"cover":cover}
     profile=channels[channel]
     required=profile.get("artifacts",[])
+    optional=profile.get("optional_artifacts",[])
+    allowed=set(required)|set(optional)
     missing=[kind for kind in required if not supplied.get(kind)]
     if missing:
         print("ERROR: missing required artifacts:",", ".join(missing)); return 1
+    unexpected=[kind for kind,path in supplied.items() if path and kind not in allowed]
+    if unexpected:
+        print("ERROR: artifacts not allowed for channel:",", ".join(unexpected)); return 1
+    supplied={kind:path for kind,path in supplied.items() if kind in allowed}
     root=Path(cfg.get("output_dir","packages"))/channel/language
     if root.exists(): shutil.rmtree(root)
     root.mkdir(parents=True)
