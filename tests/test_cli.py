@@ -59,6 +59,14 @@ def main():
             assert store_doc["isbn"]=="PENDING"
             assert "external_id" in store_doc
             assert store_doc["external_id"] is None
+        assert run("onix",META,"--language","nb","--product","epub","-o",td/"pending-onix.xml").returncode!=0
+        onix_meta=td/"onix.yaml"; onix_data=copy.deepcopy(base)
+        onix_data["publications"]["nb"]["products"]["epub"]["isbn"]="9780000000002"
+        onix_meta.write_text(yaml.safe_dump(onix_data,sort_keys=False,allow_unicode=True))
+        onix_out=td/"onix.xml"
+        assert run("onix",onix_meta,"--language","nb","--product","epub","-o",onix_out).returncode==0
+        onix_text=onix_out.read_text()
+        assert 'release="3.0"' in onix_text and "9780000000002" in onix_text
         catalog_out=td/"catalog.json"
         assert run("catalog",META,"-o",catalog_out).returncode==0
         assert json.loads(catalog_out.read_text())["books"]==[]
