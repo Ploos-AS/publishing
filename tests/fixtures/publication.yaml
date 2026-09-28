@@ -4,7 +4,10 @@ work:
   id: publishing-fixture
 edition:
   number: 1
+  revision: 1
   year: 2026
+lifecycle:
+  status: draft
 publications:
   nb:
     title: Publishing Fixture
@@ -16,3 +19,8 @@ publications:
       epub: {isbn: PENDING}
       pdf: {isbn: PENDING}
       web: {isbn: null}
+distribution:
+  amazon_kdp: {enabled: true, product: epub, external_id: null}
+  kobo: {enabled: true, product: epub, external_id: null}
+  apple_books: {enabled: true, product: epub, external_id: null}
+  google_play_books: {enabled: true, product: epub, external_id: null}
