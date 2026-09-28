@@ -10,6 +10,8 @@ publications:
     title: Publishing Fixture
     author: Per Gustav Ousdal
     publisher: Ploos AS
+    copyright_holder: Ploos AS
+    license: CC-BY-4.0
     products:
       epub: {isbn: PENDING}
       pdf: {isbn: PENDING}
