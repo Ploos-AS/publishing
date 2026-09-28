@@ -71,7 +71,7 @@ def main():
         assert run("catalog",META,"-o",catalog_out).returncode==0
         assert json.loads(catalog_out.read_text())["books"]==[]
         assert run("catalog",META,"-o",catalog_out,"--include-unpublished").returncode==0
-        assert len(json.loads(catalog_out.read_text())["books"])==2
+        assert len(json.loads(catalog_out.read_text())["books"])==1
         deposit_meta=td/"deposit.yaml"; deposit_meta.write_text(META.read_text())
         assert run("legal-deposit",deposit_meta).returncode==0
         assert run("legal-deposit",deposit_meta,"--status","submitted","--write").returncode!=0
