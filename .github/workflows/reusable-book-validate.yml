@@ -1,0 +1,24 @@
+name: Reusable book validation
+on:
+  workflow_call:
+    inputs:
+      metadata:
+        required: false
+        type: string
+        default: publication.yaml
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fetch Ploos Publishing
+        uses: actions/checkout@v4
+        with:
+          repository: Ploos-AS/publishing
+          path: .ploos-publishing
+      - run: pip install -r .ploos-publishing/requirements.txt
+      - name: Validate publication metadata
+        run: python .ploos-publishing/scripts/ploos_publish.py validate "${{ inputs.metadata }}"
