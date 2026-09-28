@@ -8,6 +8,8 @@ from epub_qa import qa_epub
 
 AUTHOR="Per Gustav Ousdal"
 PUBLISHER="Ploos AS"
+LIFECYCLE_STATES=("draft","candidate","qualified","published","archived")
+LIFECYCLE_TRANSITIONS={"draft":{"candidate"},"candidate":{"draft","qualified"},"qualified":{"draft","published"},"published":{"archived"},"archived":set()}
 
 def load(path):
     return yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
@@ -19,6 +21,10 @@ def validate_data(data):
     errors=[]
     for key in ("schema_version","project"):
         if key not in data: errors.append(f"missing {key}")
+    edition=data.get("edition",{})
+    if edition and "revision" in edition and (not isinstance(edition["revision"],int) or edition["revision"] < 1): errors.append("edition: revision must be a positive integer")
+    lifecycle=data.get("lifecycle",{})
+    if lifecycle and lifecycle.get("status") not in LIFECYCLE_STATES: errors.append("lifecycle: invalid status")
     pubs=data.get("publications",{})
     if not pubs: errors.append("missing publications")
     for lang,pub in pubs.items():
@@ -142,6 +148,21 @@ def package(metadata,config,channel,language,epub=None,pdf=None,cover=None):
     (root/"manifest.json").write_text(json.dumps(package_manifest,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
     print(root); return 0
 
+
+def lifecycle(metadata,to_status,write=False):
+    p=Path(metadata); data=load(p)
+    current=data.get("lifecycle",{}).get("status","draft")
+    if to_status not in LIFECYCLE_STATES:
+        print("ERROR: invalid lifecycle status:",to_status); return 1
+    if to_status not in LIFECYCLE_TRANSITIONS.get(current,set()):
+        print(f"ERROR: invalid lifecycle transition: {current} -> {to_status}"); return 1
+    print(f"{current} -> {to_status}")
+    if write:
+        data.setdefault("lifecycle",{})["status"]=to_status
+        p.write_text(yaml.safe_dump(data,sort_keys=False,allow_unicode=True),encoding="utf-8")
+        print(p)
+    return 0
+
 def main():
     ap=argparse.ArgumentParser(prog="ploos-publish")
     sub=ap.add_subparsers(dest="cmd",required=True)
@@ -150,12 +171,14 @@ def main():
     m=sub.add_parser("manifest"); m.add_argument("metadata"); m.add_argument("artifacts",nargs="*"); m.add_argument("-o","--output",default="release-manifest.json")
     q=sub.add_parser("qualify"); q.add_argument("metadata"); q.add_argument("--epub",action="append",default=[]); q.add_argument("-o","--output",default="qualification-report.json")
     b=sub.add_parser("build"); b.add_argument("config"); b.add_argument("--target")
+    l=sub.add_parser("lifecycle"); l.add_argument("metadata"); l.add_argument("status",choices=LIFECYCLE_STATES); l.add_argument("--write",action="store_true")
     p=sub.add_parser("package"); p.add_argument("metadata"); p.add_argument("config"); p.add_argument("--channel",required=True,choices=["amazon","kobo","apple","google"]); p.add_argument("--language",required=True); p.add_argument("--epub"); p.add_argument("--pdf"); p.add_argument("--cover")
     a=ap.parse_args()
     if a.cmd=="validate": return validate(a.metadata)
     if a.cmd=="epubcheck": return epubcheck(a.epub)
     if a.cmd=="manifest": return manifest(a.metadata,a.output,a.artifacts)
     if a.cmd=="build": return build(a.config,a.target)
+    if a.cmd=="lifecycle": return lifecycle(a.metadata,a.status,a.write)
     if a.cmd=="package": return package(a.metadata,a.config,a.channel,a.language,a.epub,a.pdf,a.cover)
     return qualify(a.metadata,a.epub,a.output)
 
