@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse, hashlib, json, shutil, subprocess, zipfile
 from pathlib import Path
 import yaml
+from PIL import Image, ImageOps
 from epub_qa import qa_epub
 
 AUTHOR="Per Gustav Ousdal"
@@ -168,6 +169,38 @@ def lifecycle(metadata,to_status,write=False):
         print(p)
     return 0
 
+
+def cover_check(image,config):
+    cfg=load(config).get("master",{}); p=Path(image)
+    if not p.is_file(): print("ERROR: cover not found:",p); return 1
+    errors=[]
+    try:
+        with Image.open(p) as im:
+            fmt=im.format; w,h=im.size
+            if fmt not in cfg.get("formats",["JPEG","PNG"]): errors.append(f"unsupported format: {fmt}")
+            if w < cfg.get("min_width",1): errors.append(f"width {w} below minimum")
+            if h < cfg.get("min_height",1): errors.append(f"height {h} below minimum")
+            target=float(cfg.get("aspect_ratio",w/h)); tol=float(cfg.get("aspect_tolerance",0.03))
+            if abs((w/h)-target)>tol: errors.append(f"aspect ratio {w/h:.4f} outside tolerance")
+    except Exception as exc: errors.append(f"cannot read image: {exc}")
+    for e in errors: print("ERROR:",e)
+    if errors: return 1
+    print(f"Cover validation OK: {w}x{h} {fmt}"); return 0
+
+def cover_build(image,config,output_dir):
+    if cover_check(image,config): return 1
+    cfg=load(config); root=Path(output_dir); root.mkdir(parents=True,exist_ok=True)
+    with Image.open(image) as src:
+        src=src.convert("RGB")
+        for channel,spec in cfg.get("channels",{}).items():
+            size=(int(spec["width"]),int(spec["height"]))
+            out=ImageOps.fit(src,size,method=Image.Resampling.LANCZOS,centering=(0.5,0.5))
+            fmt=spec.get("format","JPEG").upper(); ext=".jpg" if fmt=="JPEG" else ".png"
+            dst=root/f"{channel}{ext}"
+            kwargs={"quality":int(spec.get("quality",92)),"optimize":True} if fmt=="JPEG" else {"optimize":True}
+            out.save(dst,format=fmt,**kwargs); print(dst)
+    return 0
+
 def main():
     ap=argparse.ArgumentParser(prog="ploos-publish")
     sub=ap.add_subparsers(dest="cmd",required=True)
@@ -176,6 +209,8 @@ def main():
     m=sub.add_parser("manifest"); m.add_argument("metadata"); m.add_argument("artifacts",nargs="*"); m.add_argument("-o","--output",default="release-manifest.json")
     q=sub.add_parser("qualify"); q.add_argument("metadata"); q.add_argument("--epub",action="append",default=[]); q.add_argument("-o","--output",default="qualification-report.json")
     b=sub.add_parser("build"); b.add_argument("config"); b.add_argument("--target")
+    cc=sub.add_parser("cover-check"); cc.add_argument("image"); cc.add_argument("config")
+    cb=sub.add_parser("cover-build"); cb.add_argument("image"); cb.add_argument("config"); cb.add_argument("--output-dir",default="dist/covers")
     l=sub.add_parser("lifecycle"); l.add_argument("metadata"); l.add_argument("status",choices=LIFECYCLE_STATES); l.add_argument("--write",action="store_true")
     p=sub.add_parser("package"); p.add_argument("metadata"); p.add_argument("config"); p.add_argument("--channel",required=True,choices=["amazon","kobo","apple","google"]); p.add_argument("--language",required=True); p.add_argument("--epub"); p.add_argument("--pdf"); p.add_argument("--cover")
     a=ap.parse_args()
@@ -183,6 +218,8 @@ def main():
     if a.cmd=="epubcheck": return epubcheck(a.epub)
     if a.cmd=="manifest": return manifest(a.metadata,a.output,a.artifacts)
     if a.cmd=="build": return build(a.config,a.target)
+    if a.cmd=="cover-check": return cover_check(a.image,a.config)
+    if a.cmd=="cover-build": return cover_build(a.image,a.config,a.output_dir)
     if a.cmd=="lifecycle": return lifecycle(a.metadata,a.status,a.write)
     if a.cmd=="package": return package(a.metadata,a.config,a.channel,a.language,a.epub,a.pdf,a.cover)
     return qualify(a.metadata,a.epub,a.output)
