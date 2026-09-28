@@ -55,6 +55,10 @@ Ploos AS projects should adopt [PLOOS-PROJECT-1](standards/PLOOS-PROJECT-1.md). 
 
 Qualification is delegated to stable `Ploos-AS/hardware-ci` workflows where applicable. Publishing policy and reusable production conventions remain canonical here.
 
+## Reusable workflow
+
+Publishing-capable PLOOS-PROJECT-1 consumers use the versioned reusable workflow contract documented in [docs/reusable-workflow.md](docs/reusable-workflow.md). Release qualification must use a qualified stable major alias such as `@v1`, not `@main`.
+
 ## Canonicality
 
 `main` is canonical. Project repositories should consume or copy versioned publishing metadata/templates from this repository rather than inventing incompatible local conventions.
