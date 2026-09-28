@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import json, subprocess, sys, tempfile, zipfile
+import copy, json, subprocess, sys, tempfile, zipfile
+import yaml
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -23,6 +24,20 @@ def make_epub(path):
 
 def main():
     assert run("validate",META).returncode==0
+    base=yaml.safe_load(META.read_text())
+    with tempfile.TemporaryDirectory() as policy_td:
+        policy_td=Path(policy_td)
+        for field,bad in (("author","Wrong Author"),("publisher","Wrong Publisher"),("copyright_holder","Wrong Holder"),("license","CC-BY-NC-4.0")):
+            data=copy.deepcopy(base); data["publications"]["nb"][field]=bad
+            bad_meta=policy_td/f"bad-{field}.yaml"
+            bad_meta.write_text(yaml.safe_dump(data,sort_keys=False,allow_unicode=True))
+            assert run("validate",bad_meta).returncode!=0, field
+        life=policy_td/"lifecycle.yaml"; life.write_text(META.read_text())
+        for state in ("candidate","qualified","published","archived"):
+            assert run("lifecycle",life,state,"--write").returncode==0
+        assert run("lifecycle",life,"draft").returncode!=0
+        invalid=policy_td/"invalid-transition.yaml"; invalid.write_text(META.read_text())
+        assert run("lifecycle",invalid,"published").returncode!=0
     with tempfile.TemporaryDirectory() as td:
         td=Path(td); epub=td/"fixture.epub"; cover=td/"cover.jpg"; pdf=td/"fixture.pdf"
         make_epub(epub); cover.write_bytes(b"fixture-cover"); pdf.write_bytes(b"%PDF-fixture")
@@ -38,7 +53,7 @@ def main():
         package=td/"packages"/"amazon"/"nb"
         assert (package/"metadata.json").is_file()
         assert len(json.loads((package/"manifest.json").read_text())["artifacts"])==2
-    print("Publishing M1 self-test PASS")
+    print("Publishing M1/M2 self-test PASS")
     return 0
 
 if __name__=="__main__":
