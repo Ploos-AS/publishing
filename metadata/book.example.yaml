@@ -1,0 +1,44 @@
+schema_version: 1
+project: EduNumbers
+publisher: Ploos AS
+
+title:
+  nb: Tallsystemer for datateknikk
+  en: Number Systems for Computing
+
+subtitle:
+  nb: null
+  en: null
+
+edition: 1
+publication_year: 2026
+
+languages:
+  - nb
+  - en
+
+formats:
+  web:
+    isbn: null
+  epub:
+    isbn:
+      nb: PENDING
+      en: PENDING
+  kindle:
+    isbn:
+      nb: PENDING
+      en: PENDING
+  pdf:
+    isbn:
+      nb: PENDING
+      en: PENDING
+
+copyright:
+  holder: Ploos AS
+  year: 2026
+
+license:
+  documentation: CC-BY-4.0
+
+source:
+  repository: https://github.com/Ploos-AS/EduNumbers
