@@ -213,6 +213,42 @@ def cover_build(image,config,output_dir):
 
 
 
+
+def archive_manifest(metadata,artifacts,output):
+    meta=Path(metadata)
+    if not meta.is_file(): print("ERROR: metadata not found:",meta); return 1
+    files=[]
+    for item in artifacts:
+        p=Path(item)
+        if not p.is_file(): print("ERROR: archive artifact not found:",p); return 1
+        files.append({"path":str(p),"bytes":p.stat().st_size,"sha256":sha256(p)})
+    files.sort(key=lambda x:x["path"])
+    data=load(meta)
+    doc={"schema_version":1,"project":data.get("project"),"work_id":data.get("work",{}).get("id"),
+         "edition":data.get("edition"),"metadata":{"path":str(meta),"bytes":meta.stat().st_size,"sha256":sha256(meta)},
+         "artifacts":files}
+    out=Path(output); out.parent.mkdir(parents=True,exist_ok=True)
+    out.write_text(json.dumps(doc,indent=2,ensure_ascii=False,sort_keys=True)+"\n",encoding="utf-8")
+    print(out); return 0
+
+def audit_archive(manifest):
+    p=Path(manifest)
+    if not p.is_file(): print("ERROR: archive manifest not found:",p); return 1
+    try: doc=json.loads(p.read_text(encoding="utf-8"))
+    except Exception as exc: print("ERROR: invalid archive manifest:",exc); return 1
+    failures=[]
+    records=[("metadata",doc.get("metadata",{}))]
+    records += [(f"artifact:{r.get('path')}",r) for r in doc.get("artifacts",[])]
+    for label,record in records:
+        path=Path(record.get("path",""))
+        if not path.is_file(): failures.append(f"{label}: missing {path}"); continue
+        if path.stat().st_size!=record.get("bytes"): failures.append(f"{label}: size mismatch")
+        if sha256(path)!=record.get("sha256"): failures.append(f"{label}: sha256 mismatch")
+    for failure in failures: print("ERROR:",failure)
+    if failures: return 1
+    print(f"Archive audit PASS: {len(records)} files verified")
+    return 0
+
 ONIX_LANG={"nb":"nor","nn":"nno","en":"eng"}
 ONIX_PRODUCT_FORM={"epub":"ED","pdf":"ED"}
 
@@ -365,6 +401,8 @@ def main():
     b=sub.add_parser("build"); b.add_argument("config"); b.add_argument("--target")
     cc=sub.add_parser("cover-check"); cc.add_argument("image"); cc.add_argument("config")
     cb=sub.add_parser("cover-build"); cb.add_argument("image"); cb.add_argument("config"); cb.add_argument("--output-dir",default="dist/covers")
+    am=sub.add_parser("archive"); am.add_argument("metadata"); am.add_argument("artifacts",nargs="*"); am.add_argument("-o","--output",default="archive-manifest.json")
+    au=sub.add_parser("audit"); au.add_argument("manifest")
     ox=sub.add_parser("onix"); ox.add_argument("metadata"); ox.add_argument("--language",required=True); ox.add_argument("--product",required=True); ox.add_argument("-o","--output",default="onix.xml")
     cat=sub.add_parser("catalog"); cat.add_argument("metadata",nargs="+"); cat.add_argument("-o","--output",default="catalog.json"); cat.add_argument("--include-unpublished",action="store_true")
     ld=sub.add_parser("legal-deposit"); ld.add_argument("metadata"); ld.add_argument("--status",choices=LEGAL_DEPOSIT_STATES); ld.add_argument("--artifact",action="append",default=[]); ld.add_argument("--reference"); ld.add_argument("--method"); ld.add_argument("--write",action="store_true")
@@ -379,6 +417,8 @@ def main():
     if a.cmd=="build": return build(a.config,a.target)
     if a.cmd=="cover-check": return cover_check(a.image,a.config)
     if a.cmd=="cover-build": return cover_build(a.image,a.config,a.output_dir)
+    if a.cmd=="archive": return archive_manifest(a.metadata,a.artifacts,a.output)
+    if a.cmd=="audit": return audit_archive(a.manifest)
     if a.cmd=="onix": return onix(a.metadata,a.language,a.product,a.output)
     if a.cmd=="catalog": return catalog(a.metadata,a.output,a.include_unpublished)
     if a.cmd=="legal-deposit": return legal_deposit(a.metadata,a.status,a.artifact,a.reference,a.method,a.write)
