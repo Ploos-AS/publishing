@@ -109,6 +109,39 @@ def build(config,target=None):
         print(f"PASS: {name}")
     return 0
 
+def package(metadata,config,channel,language,epub=None,pdf=None,cover=None):
+    data=load(metadata); cfg=load(config).get("package",{})
+    channels=cfg.get("channels",{})
+    if channel not in channels:
+        print("ERROR: unknown channel:",channel); return 1
+    pub=data.get("publications",{}).get(language)
+    if not pub:
+        print("ERROR: unknown publication language:",language); return 1
+    supplied={"epub":epub,"pdf":pdf,"cover":cover}
+    profile=channels[channel]
+    required=profile.get("artifacts",[])
+    missing=[kind for kind in required if not supplied.get(kind)]
+    if missing:
+        print("ERROR: missing required artifacts:",", ".join(missing)); return 1
+    root=Path(cfg.get("output_dir","packages"))/channel/language
+    if root.exists(): shutil.rmtree(root)
+    root.mkdir(parents=True)
+    copied=[]
+    for kind,path in supplied.items():
+        if not path: continue
+        src=Path(path)
+        if not src.is_file():
+            print(f"ERROR: {kind} not found: {src}"); return 1
+        dst=root/src.name; shutil.copy2(src,dst)
+        copied.append({"kind":kind,"file":dst.name,"bytes":dst.stat().st_size,"sha256":sha256(dst)})
+    meta={"project":data.get("project"),"language":language,"channel":channel,
+          "title":pub.get("title"),"author":pub.get("author"),"publisher":pub.get("publisher"),
+          "edition":data.get("edition"),"products":pub.get("products",{})}
+    (root/"metadata.json").write_text(json.dumps(meta,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
+    package_manifest={"schema_version":1,"channel":channel,"language":language,"artifacts":copied}
+    (root/"manifest.json").write_text(json.dumps(package_manifest,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
+    print(root); return 0
+
 def main():
     ap=argparse.ArgumentParser(prog="ploos-publish")
     sub=ap.add_subparsers(dest="cmd",required=True)
@@ -117,11 +150,13 @@ def main():
     m=sub.add_parser("manifest"); m.add_argument("metadata"); m.add_argument("artifacts",nargs="*"); m.add_argument("-o","--output",default="release-manifest.json")
     q=sub.add_parser("qualify"); q.add_argument("metadata"); q.add_argument("--epub",action="append",default=[]); q.add_argument("-o","--output",default="qualification-report.json")
     b=sub.add_parser("build"); b.add_argument("config"); b.add_argument("--target")
+    p=sub.add_parser("package"); p.add_argument("metadata"); p.add_argument("config"); p.add_argument("--channel",required=True,choices=["amazon","kobo","apple","google"]); p.add_argument("--language",required=True); p.add_argument("--epub"); p.add_argument("--pdf"); p.add_argument("--cover")
     a=ap.parse_args()
     if a.cmd=="validate": return validate(a.metadata)
     if a.cmd=="epubcheck": return epubcheck(a.epub)
     if a.cmd=="manifest": return manifest(a.metadata,a.output,a.artifacts)
     if a.cmd=="build": return build(a.config,a.target)
+    if a.cmd=="package": return package(a.metadata,a.config,a.channel,a.language,a.epub,a.pdf,a.cover)
     return qualify(a.metadata,a.epub,a.output)
 
 if __name__=="__main__":
