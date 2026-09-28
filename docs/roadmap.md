@@ -20,8 +20,8 @@
 
 ## M2 — publishing operations
 
-- [ ] Publication lifecycle states
-- [ ] Edition/revision management
+- [x] Publication lifecycle states
+- [x] Edition/revision management
 - [ ] Cover validation/derivatives
 - [ ] Store metadata export
 - [ ] Accessibility report
