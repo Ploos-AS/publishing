@@ -36,7 +36,7 @@ publications:
       web:
         isbn: null
 distribution:
-  amazon_kdp: {enabled: true, product: epub}
-  kobo: {enabled: true, product: epub}
-  apple_books: {enabled: true, product: epub}
-  google_play_books: {enabled: true, product: epub}
+  amazon_kdp: {enabled: true, product: epub, external_id: null}
+  kobo: {enabled: true, product: epub, external_id: null}
+  apple_books: {enabled: true, product: epub, external_id: null}
+  google_play_books: {enabled: true, product: epub, external_id: null}
