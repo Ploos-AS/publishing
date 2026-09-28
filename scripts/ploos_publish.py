@@ -98,6 +98,15 @@ def validate_data(data):
         if key not in data: errors.append(f"missing {key}")
     edition=data.get("edition",{})
     if edition and "revision" in edition and (not isinstance(edition["revision"],int) or edition["revision"] < 1): errors.append("edition: revision must be a positive integer")
+    if edition and "number" in edition and (not isinstance(edition["number"],int) or edition["number"] < 1): errors.append("edition: number must be a positive integer")
+    supersedes=edition.get("supersedes")
+    if supersedes is not None:
+        if not isinstance(supersedes,dict): errors.append("edition: supersedes must be an object")
+        else:
+            if not supersedes.get("work_id"): errors.append("edition: supersedes.work_id required")
+            if not isinstance(supersedes.get("edition"),int) or supersedes.get("edition",0)<1: errors.append("edition: supersedes.edition must be a positive integer")
+            if supersedes.get("work_id")==data.get("work",{}).get("id") and supersedes.get("edition")==edition.get("number"):
+                errors.append("edition: cannot supersede itself")
     lifecycle=data.get("lifecycle",{})
     if lifecycle and lifecycle.get("status") not in LIFECYCLE_STATES: errors.append("lifecycle: invalid status")
     pubs=data.get("publications",{})
