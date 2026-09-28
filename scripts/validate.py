@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Validate Ploos publishing metadata and ISBN registry."""
 from __future__ import annotations
-import re, sys
+import re
 from pathlib import Path
 import yaml
 
@@ -21,11 +21,13 @@ def main() -> int:
     registry=yaml.safe_load(REGISTRY.read_text()) or {}
     example=yaml.safe_load(EXAMPLE.read_text()) or {}
     if not example.get("project"): errors.append("book.example.yaml: missing project")
-    if not example.get("titles",{}).get("nb"): errors.append("book.example.yaml: missing Norwegian title")
-    if not example.get("titles",{}).get("en"): errors.append("book.example.yaml: missing English title")
+    if example.get("author")!="Per Gustav Ousdal": errors.append("book.example.yaml: invalid author")
+    if example.get("publisher")!="Ploos AS": errors.append("book.example.yaml: invalid publisher")
+    if not example.get("title",{}).get("nb"): errors.append("book.example.yaml: missing Norwegian title")
+    if not example.get("title",{}).get("en"): errors.append("book.example.yaml: missing English title")
 
     seen={}
-    for item in registry.get("publications",[]):
+    for item in registry.get("allocations",[]):
         value=str(item.get("isbn","PENDING"))
         if value=="PENDING": continue
         if not isbn13_ok(value): errors.append(f"invalid ISBN-13: {value}")
@@ -38,5 +40,6 @@ def main() -> int:
         return 1
     print("Publishing metadata validation OK")
     return 0
+
 if __name__=="__main__":
     raise SystemExit(main())
