@@ -2,6 +2,7 @@
 """Ploos Publishing CLI."""
 from __future__ import annotations
 import argparse, hashlib, json, shutil, subprocess, zipfile
+from xml.etree import ElementTree as ET
 from pathlib import Path
 import yaml
 from PIL import Image, ImageOps
@@ -211,6 +212,53 @@ def cover_build(image,config,output_dir):
 
 
 
+
+ONIX_LANG={"nb":"nor","nn":"nno","en":"eng"}
+ONIX_PRODUCT_FORM={"epub":"ED","pdf":"ED"}
+
+def onix(metadata,language,product_name,output):
+    data=load(metadata); errors=validate_data(data)
+    if errors:
+        for e in errors: print("ERROR:",e)
+        return 1
+    pub=data.get("publications",{}).get(language)
+    if not pub: print("ERROR: unknown publication language:",language); return 1
+    product=pub.get("products",{}).get(product_name)
+    if not product: print("ERROR: product not found:",product_name); return 1
+    isbn=product.get("isbn")
+    if not isbn or isbn=="PENDING":
+        print("ERROR: ONIX export requires an assigned ISBN"); return 1
+    root=ET.Element("ONIXMessage",{"release":"3.0","xmlns":"http://ns.editeur.org/onix/3.0/reference"})
+    header=ET.SubElement(root,"Header")
+    sender=ET.SubElement(header,"Sender"); ET.SubElement(sender,"SenderName").text=PUBLISHER
+    product_el=ET.SubElement(root,"Product")
+    ET.SubElement(product_el,"RecordReference").text=f"{data.get('work',{}).get('id',data.get('project'))}-{language}-{product_name}"
+    ET.SubElement(product_el,"NotificationType").text="03"
+    ident=ET.SubElement(product_el,"ProductIdentifier")
+    ET.SubElement(ident,"ProductIDType").text="15"; ET.SubElement(ident,"IDValue").text=str(isbn)
+    desc=ET.SubElement(product_el,"DescriptiveDetail")
+    ET.SubElement(desc,"ProductComposition").text="00"
+    ET.SubElement(desc,"ProductForm").text=ONIX_PRODUCT_FORM.get(product_name,"ED")
+    title_detail=ET.SubElement(desc,"TitleDetail"); ET.SubElement(title_detail,"TitleType").text="01"
+    title_el=ET.SubElement(title_detail,"TitleElement"); ET.SubElement(title_el,"TitleElementLevel").text="01"
+    ET.SubElement(title_el,"TitleText").text=pub.get("title")
+    contributor=ET.SubElement(desc,"Contributor"); ET.SubElement(contributor,"SequenceNumber").text="1"
+    ET.SubElement(contributor,"ContributorRole").text="A01"; ET.SubElement(contributor,"PersonName").text=pub.get("author")
+    lang=ET.SubElement(desc,"Language"); ET.SubElement(lang,"LanguageRole").text="01"
+    ET.SubElement(lang,"LanguageCode").text=ONIX_LANG.get(language,language)
+    edition=data.get("edition",{})
+    if edition.get("number"): ET.SubElement(desc,"EditionNumber").text=str(edition["number"])
+    publishing=ET.SubElement(product_el,"PublishingDetail")
+    publisher=ET.SubElement(publishing,"Publisher"); ET.SubElement(publisher,"PublishingRole").text="01"
+    ET.SubElement(publisher,"PublisherName").text=pub.get("publisher")
+    if edition.get("year"):
+        pd=ET.SubElement(publishing,"PublishingDate"); ET.SubElement(pd,"PublishingDateRole").text="01"
+        ET.SubElement(pd,"Date",{"dateformat":"05"}).text=str(edition["year"])
+    tree=ET.ElementTree(root); ET.indent(tree,space="  ")
+    out=Path(output); out.parent.mkdir(parents=True,exist_ok=True)
+    tree.write(out,encoding="utf-8",xml_declaration=True)
+    print(out); return 0
+
 def catalog(metadata_files,output,include_unpublished=False):
     books=[]
     for metadata in metadata_files:
@@ -317,6 +365,7 @@ def main():
     b=sub.add_parser("build"); b.add_argument("config"); b.add_argument("--target")
     cc=sub.add_parser("cover-check"); cc.add_argument("image"); cc.add_argument("config")
     cb=sub.add_parser("cover-build"); cb.add_argument("image"); cb.add_argument("config"); cb.add_argument("--output-dir",default="dist/covers")
+    ox=sub.add_parser("onix"); ox.add_argument("metadata"); ox.add_argument("--language",required=True); ox.add_argument("--product",required=True); ox.add_argument("-o","--output",default="onix.xml")
     cat=sub.add_parser("catalog"); cat.add_argument("metadata",nargs="+"); cat.add_argument("-o","--output",default="catalog.json"); cat.add_argument("--include-unpublished",action="store_true")
     ld=sub.add_parser("legal-deposit"); ld.add_argument("metadata"); ld.add_argument("--status",choices=LEGAL_DEPOSIT_STATES); ld.add_argument("--artifact",action="append",default=[]); ld.add_argument("--reference"); ld.add_argument("--method"); ld.add_argument("--write",action="store_true")
     ar=sub.add_parser("accessibility-report"); ar.add_argument("metadata"); ar.add_argument("--epub",required=True); ar.add_argument("--language",required=True); ar.add_argument("-o","--output",default="accessibility-report.json")
@@ -330,6 +379,7 @@ def main():
     if a.cmd=="build": return build(a.config,a.target)
     if a.cmd=="cover-check": return cover_check(a.image,a.config)
     if a.cmd=="cover-build": return cover_build(a.image,a.config,a.output_dir)
+    if a.cmd=="onix": return onix(a.metadata,a.language,a.product,a.output)
     if a.cmd=="catalog": return catalog(a.metadata,a.output,a.include_unpublished)
     if a.cmd=="legal-deposit": return legal_deposit(a.metadata,a.status,a.artifact,a.reference,a.method,a.write)
     if a.cmd=="accessibility-report": return accessibility_report(a.metadata,a.epub,a.language,a.output)
