@@ -148,6 +148,19 @@ def main():
         manifest=td/"release.json"
         assert run("manifest",META,epub,pdf,"-o",manifest).returncode==0
         assert len(json.loads(manifest.read_text())["artifacts"])==2
+        provenance=td/"provenance.json"
+        fixture_commit="0123456789abcdef0123456789abcdef01234567"
+        assert run("provenance",META,"--git-commit",fixture_commit,"--qualification",report,"--artifact",epub,"--artifact",pdf,"-o",provenance).returncode==0
+        provenance_doc=json.loads(provenance.read_text())
+        assert provenance_doc["git_commit"]==fixture_commit
+        assert provenance_doc["qualification"]["status"]=="PASS"
+        assert run("provenance-verify",provenance).returncode==0
+        original_epub=epub.read_bytes(); epub.write_bytes(original_epub+b"tampered")
+        assert run("provenance-verify",provenance).returncode!=0
+        epub.write_bytes(original_epub)
+        assert run("provenance-verify",provenance).returncode==0
+        failed_report=td/"failed-qualification.json"; failed_report.write_text(json.dumps({"status":"FAIL"}))
+        assert run("provenance",META,"--git-commit",fixture_commit,"--qualification",failed_report,"-o",td/"bad-provenance.json").returncode!=0
         cfg=td/"package.yaml"
         cfg.write_text(PKG.read_text().replace("output_dir: packages",f"output_dir: {td/'packages'}"))
         assert run("package",META,cfg,"--channel","amazon","--language","nb","--epub",epub,"--cover",cover).returncode!=0
