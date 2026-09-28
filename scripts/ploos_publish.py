@@ -328,6 +328,34 @@ def audit_archive(manifest):
 
 ONIX_LANG={"nb":"nor","nn":"nno","en":"eng"}
 ONIX_PRODUCT_FORM={"epub":"ED","pdf":"ED"}
+ONIX_PRODUCT_DETAIL={"epub":"E101","pdf":"E107"}
+
+def onix_validate_file(path):
+    p=Path(path)
+    try: root=ET.parse(p).getroot()
+    except Exception as exc: print("ERROR: invalid ONIX XML:",exc); return 1
+    ns={"o":"http://ns.editeur.org/onix/3.0/reference"}
+    errors=[]
+    if root.tag!="{http://ns.editeur.org/onix/3.0/reference}ONIXMessage": errors.append("invalid ONIX namespace/root")
+    if root.get("release")!="3.0": errors.append("ONIX release must be 3.0")
+    products=root.findall("o:Product",ns)
+    if not products: errors.append("missing Product")
+    for i,product in enumerate(products):
+        def req(path,label):
+            el=product.find(path,ns)
+            if el is None or not (el.text or "").strip(): errors.append(f"product {i}: missing {label}")
+            return el
+        req("o:RecordReference","RecordReference"); req("o:NotificationType","NotificationType")
+        idv=req("o:ProductIdentifier/o:IDValue","ISBN-13")
+        if idv is not None and not isbn13_valid(idv.text): errors.append(f"product {i}: invalid ISBN-13")
+        req("o:DescriptiveDetail/o:ProductForm","ProductForm")
+        req("o:DescriptiveDetail/o:TitleDetail/o:TitleElement/o:TitleText","TitleText")
+        req("o:DescriptiveDetail/o:Contributor/o:ContributorRole","ContributorRole")
+        req("o:DescriptiveDetail/o:Language/o:LanguageCode","LanguageCode")
+        req("o:PublishingDetail/o:Publisher/o:PublisherName","PublisherName")
+    for e in errors: print("ERROR:",e)
+    if errors: return 1
+    print(f"ONIX structural validation OK: {len(products)} product(s)"); return 0
 
 def onix(metadata,language,product_name,output):
     data=load(metadata); errors=validate_data(data)
@@ -352,6 +380,7 @@ def onix(metadata,language,product_name,output):
     desc=ET.SubElement(product_el,"DescriptiveDetail")
     ET.SubElement(desc,"ProductComposition").text="00"
     ET.SubElement(desc,"ProductForm").text=ONIX_PRODUCT_FORM.get(product_name,"ED")
+    ET.SubElement(desc,"ProductFormDetail").text=ONIX_PRODUCT_DETAIL.get(product_name,"E101")
     title_detail=ET.SubElement(desc,"TitleDetail"); ET.SubElement(title_detail,"TitleType").text="01"
     title_el=ET.SubElement(title_detail,"TitleElement"); ET.SubElement(title_el,"TitleElementLevel").text="01"
     ET.SubElement(title_el,"TitleText").text=pub.get("title")
@@ -484,6 +513,7 @@ def main():
     am=sub.add_parser("archive"); am.add_argument("metadata"); am.add_argument("artifacts",nargs="*"); am.add_argument("-o","--output",default="archive-manifest.json")
     au=sub.add_parser("audit"); au.add_argument("manifest")
     ox=sub.add_parser("onix"); ox.add_argument("metadata"); ox.add_argument("--language",required=True); ox.add_argument("--product",required=True); ox.add_argument("-o","--output",default="onix.xml")
+    ov=sub.add_parser("onix-validate"); ov.add_argument("onix")
     cat=sub.add_parser("catalog"); cat.add_argument("metadata",nargs="+"); cat.add_argument("-o","--output",default="catalog.json"); cat.add_argument("--include-unpublished",action="store_true")
     ld=sub.add_parser("legal-deposit"); ld.add_argument("metadata"); ld.add_argument("--status",choices=LEGAL_DEPOSIT_STATES); ld.add_argument("--artifact",action="append",default=[]); ld.add_argument("--reference"); ld.add_argument("--method"); ld.add_argument("--write",action="store_true")
     ar=sub.add_parser("accessibility-report"); ar.add_argument("metadata"); ar.add_argument("--epub",required=True); ar.add_argument("--language",required=True); ar.add_argument("-o","--output",default="accessibility-report.json")
@@ -503,6 +533,7 @@ def main():
     if a.cmd=="archive": return archive_manifest(a.metadata,a.artifacts,a.output)
     if a.cmd=="audit": return audit_archive(a.manifest)
     if a.cmd=="onix": return onix(a.metadata,a.language,a.product,a.output)
+    if a.cmd=="onix-validate": return onix_validate_file(a.onix)
     if a.cmd=="catalog": return catalog(a.metadata,a.output,a.include_unpublished)
     if a.cmd=="legal-deposit": return legal_deposit(a.metadata,a.status,a.artifact,a.reference,a.method,a.write)
     if a.cmd=="accessibility-report": return accessibility_report(a.metadata,a.epub,a.language,a.output)
