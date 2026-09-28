@@ -127,7 +127,19 @@ def main():
         assert len(json.loads(manifest.read_text())["artifacts"])==2
         cfg=td/"package.yaml"
         cfg.write_text(PKG.read_text().replace("output_dir: packages",f"output_dir: {td/'packages'}"))
-        assert run("package",META,cfg,"--channel","amazon","--language","nb","--epub",epub,"--cover",cover).returncode==0
+        assert run("package",META,cfg,"--channel","amazon","--language","nb","--epub",epub,"--cover",cover).returncode!=0
+        qualified_meta=td/"qualified.yaml"; qualified_data=copy.deepcopy(base)
+        qualified_data["lifecycle"]["status"]="qualified"
+        qualified_meta.write_text(yaml.safe_dump(qualified_data,sort_keys=False,allow_unicode=True))
+        assert run("package",qualified_meta,cfg,"--channel","amazon","--language","nb","--epub",epub,"--cover",cover).returncode==0
+        published_meta=td/"published.yaml"; published_data=copy.deepcopy(base)
+        published_data["lifecycle"]["status"]="published"
+        published_meta.write_text(yaml.safe_dump(published_data,sort_keys=False,allow_unicode=True))
+        assert run("package",published_meta,cfg,"--channel","amazon","--language","nb","--epub",epub,"--cover",cover).returncode==0
+        archived_meta=td/"archived.yaml"; archived_data=copy.deepcopy(base)
+        archived_data["lifecycle"]["status"]="archived"
+        archived_meta.write_text(yaml.safe_dump(archived_data,sort_keys=False,allow_unicode=True))
+        assert run("package",archived_meta,cfg,"--channel","amazon","--language","nb","--epub",epub,"--cover",cover).returncode!=0
         package=td/"packages"/"amazon"/"nb"
         assert (package/"metadata.json").is_file()
         assert len(json.loads((package/"manifest.json").read_text())["artifacts"])==2
