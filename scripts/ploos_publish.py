@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Ploos Publishing CLI."""
 from __future__ import annotations
-import argparse, hashlib, json, shutil, subprocess, zipfile
+import argparse, hashlib, json, os, shutil, subprocess, zipfile
 from xml.etree import ElementTree as ET
 from pathlib import Path
 import yaml
@@ -224,15 +224,18 @@ def package(metadata,config,channel,language,epub=None,pdf=None,cover=None):
         src=Path(path)
         if not src.is_file():
             print(f"ERROR: {kind} not found: {src}"); return 1
-        dst=root/src.name; shutil.copy2(src,dst)
+        dst=root/src.name; shutil.copyfile(src,dst)
+        os.utime(dst,(0,0))
         copied.append({"kind":kind,"file":dst.name,"bytes":dst.stat().st_size,"sha256":sha256(dst)})
     meta={"project":data.get("project"),"language":language,"channel":channel,
           "title":pub.get("title"),"author":pub.get("author"),"publisher":pub.get("publisher"),
           "copyright_holder":pub.get("copyright_holder"),"license":pub.get("license"),
           "edition":data.get("edition"),"products":pub.get("products",{})}
-    (root/"metadata.json").write_text(json.dumps(meta,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
+    copied.sort(key=lambda x:(x["kind"],x["file"]))
     package_manifest={"schema_version":1,"channel":channel,"language":language,"artifacts":copied}
-    (root/"manifest.json").write_text(json.dumps(package_manifest,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
+    (root/"manifest.json").write_text(json.dumps(package_manifest,indent=2,ensure_ascii=False,sort_keys=True)+"\n",encoding="utf-8")
+    (root/"metadata.json").write_text(json.dumps(meta,indent=2,ensure_ascii=False,sort_keys=True)+"\n",encoding="utf-8")
+    for generated in (root/"metadata.json",root/"manifest.json"): os.utime(generated,(0,0))
     print(root); return 0
 
 
