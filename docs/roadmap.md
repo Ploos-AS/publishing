@@ -20,6 +20,8 @@
 
 ## M2 — publishing operations
 
+**Status: IMPLEMENTED** — all planned M2 capabilities are present in the repository; CI qualification is still required before declaring M2 PASS.
+
 - [x] Publication lifecycle states
 - [x] Edition/revision management
 - [x] Cover validation/derivatives
@@ -28,4 +30,4 @@
 - [x] Norwegian legal-deposit tracking
 - [x] Publication catalog / books.ploos.no feed
 - [x] ONIX for Books export
-- [ ] Archive/reproducibility audit
+- [x] Archive/reproducibility audit
