@@ -38,7 +38,9 @@ properties:
     properties:
       amazon_kdp: {$ref: "#/$defs/channel"}
       kobo: {$ref: "#/$defs/channel"}
-    additionalProperties: true
+      apple_books: {$ref: "#/$defs/channel"}
+      google_play_books: {$ref: "#/$defs/channel"}
+    additionalProperties: false
 $defs:
   isbnValue:
     oneOf:
