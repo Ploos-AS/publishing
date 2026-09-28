@@ -27,5 +27,5 @@
 - [x] Accessibility report
 - [x] Norwegian legal-deposit tracking
 - [x] Publication catalog / books.ploos.no feed
-- [ ] ONIX for Books export
+- [x] ONIX for Books export
 - [ ] Archive/reproducibility audit
