@@ -67,6 +67,14 @@ def main():
         assert run("lifecycle",life,"draft").returncode!=0
         invalid=policy_td/"invalid-transition.yaml"; invalid.write_text(META.read_text())
         assert run("lifecycle",invalid,"published").returncode!=0
+        successor=copy.deepcopy(base)
+        successor["edition"]["number"]=2
+        successor["edition"]["supersedes"]={"work_id":successor["work"]["id"],"edition":1}
+        successor_meta=policy_td/"successor.yaml"; successor_meta.write_text(yaml.safe_dump(successor,sort_keys=False,allow_unicode=True))
+        assert run("validate",successor_meta).returncode==0
+        self_supersede=copy.deepcopy(successor); self_supersede["edition"]["supersedes"]["edition"]=2
+        self_meta=policy_td/"self-supersede.yaml"; self_meta.write_text(yaml.safe_dump(self_supersede,sort_keys=False,allow_unicode=True))
+        assert run("validate",self_meta).returncode!=0
     with tempfile.TemporaryDirectory() as td:
         td=Path(td); epub=td/"fixture.epub"; master=td/"cover-master.jpg"; bad_cover=td/"bad-cover.jpg"; pdf=td/"fixture.pdf"
         make_epub(epub); pdf.write_bytes(b"%PDF-fixture")
