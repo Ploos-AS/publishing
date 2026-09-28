@@ -52,6 +52,13 @@ def main():
         for channel in ("amazon","kobo","apple","google"):
             assert (covers/f"{channel}.jpg").is_file(), channel
         cover=covers/"amazon.jpg"
+        for channel in ("amazon","kobo","apple","google"):
+            store_out=td/f"{channel}-nb.json"
+            assert run("store-metadata",META,"--channel",channel,"--language","nb","-o",store_out).returncode==0
+            store_doc=json.loads(store_out.read_text())
+            assert store_doc["isbn"]=="PENDING"
+            assert "external_id" in store_doc
+            assert store_doc["external_id"] is None
         report=td/"qualification.json"
         assert run("qualify",META,"--epub",epub,"-o",report).returncode==0
         assert json.loads(report.read_text())["status"]=="PASS"
