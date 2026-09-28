@@ -9,7 +9,7 @@
 - [x] CLI skeleton
 - [x] Metadata validation
 - [x] EPUBCheck integration
-- [ ] Link/image/accessibility QA
+- [x] Link/image/basic accessibility QA
 - [ ] Build command for Web/EPUB/PDF
 - [ ] Store packaging command
 - [x] Full artifact checksums in release manifest
