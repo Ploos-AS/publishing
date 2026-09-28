@@ -1,14 +1,12 @@
-<!--
-Ploos Publishing colophon template.
-Values in {{...}} are build-time substitutions.
-Do not publish literal PENDING ISBN values in a release represented as ISBN-assigned.
--->
+<!-- Ploos Publishing colophon template. Values in {{...}} are build-time substitutions. -->
 
 # {{title}}
 
 {{#subtitle}}{{subtitle}}
 
-{{/subtitle}}© {{year}} {{copyright_holder}}
+{{/subtitle}}**{{author}}**
+
+© {{year}} {{copyright_holder}}
 
 Published by **Ploos AS**, Norway.
 
@@ -18,8 +16,7 @@ Language: {{language}}
 ## ISBN
 
 {{#isbn_epub}}- EPUB: {{isbn_epub}}
-{{/isbn_epub}}{{#isbn_kindle}}- Kindle: {{isbn_kindle}}
-{{/isbn_kindle}}{{#isbn_pdf}}- PDF: {{isbn_pdf}}
+{{/isbn_epub}}{{#isbn_pdf}}- PDF: {{isbn_pdf}}
 {{/isbn_pdf}}
 
 {{#license}}License: {{license}}
