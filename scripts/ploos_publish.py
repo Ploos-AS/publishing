@@ -70,6 +70,9 @@ def isbn_registry_validate(path):
 
 def isbn_import(registry,isbn_file,write=False):
     p=Path(registry); data=load(p)
+    publisher=data.get("publisher",{})
+    if publisher.get("prefix_status")!="assigned" or not publisher.get("publisher_prefix"):
+        print("ERROR: official publisher prefix must be assigned before ISBN import"); return 1
     raw=Path(isbn_file).read_text(encoding="utf-8").splitlines()
     incoming=[line.strip() for line in raw if line.strip() and not line.lstrip().startswith("#")]
     bad=[x for x in incoming if not isbn13_valid(x)]
