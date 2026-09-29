@@ -56,12 +56,16 @@ def main():
         dup=copy.deepcopy(valid); dup["allocations"].append(copy.deepcopy(dup["allocations"][0]))
         dup_path=isbn_td/"duplicate.yaml"; dup_path.write_text(yaml.safe_dump(dup,sort_keys=False,allow_unicode=True))
         assert run("isbn-validate",dup_path).returncode!=0
-        registry=isbn_td/"registry.yaml"; registry.write_text(ISBN_REGISTRY.read_text())
+        registry=isbn_td/"registry.yaml"
+        registry_data=yaml.safe_load(ISBN_REGISTRY.read_text())
+        registry_data["publisher"]["prefix_status"]="assigned"
+        registry_data["publisher"]["publisher_prefix"]="978-82-00000"
+        registry.write_text(yaml.safe_dump(registry_data,sort_keys=False,allow_unicode=True))
         pool=isbn_td/"pool.txt"; pool.write_text("9780000000002\n9780000000019\n9780000000026\n")
         assert run("isbn-import",registry,pool,"--write").returncode==0
         imported=yaml.safe_load(registry.read_text())
         assert imported["isbn_pool"]==["9780000000002","9780000000019","9780000000026"]
-        assert imported["publisher"]["prefix_status"]=="pending"
+        assert imported["publisher"]["prefix_status"]=="assigned"
         assert run("isbn-allocate",registry,"--project","EduNumbers","--edition","1","--language","nb","--product","epub","--write").returncode==0
         allocated=yaml.safe_load(registry.read_text())
         assert allocated["allocations"][0]["isbn"]=="9780000000002"
