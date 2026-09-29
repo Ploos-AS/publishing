@@ -27,6 +27,11 @@ jobs:
           make_epub("fixture.epub")
           PY
           python scripts/ploos_publish.py epubcheck fixture.epub
+      - name: Validate pinned ONIX schema bundle
+        if: ${{ hashFiles('vendor/onix/MANIFEST.yaml') != '' }}
+        run: |
+          python scripts/ploos_publish.py onix-schema-verify vendor/onix/MANIFEST.yaml
+          test -f vendor/onix/ONIX_BookProduct_3.0_reference.xsd
       - name: Record M2 qualification candidate
         run: |
           mkdir -p qualification
