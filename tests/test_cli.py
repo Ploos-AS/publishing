@@ -44,6 +44,9 @@ def main():
         bad=copy.deepcopy(valid); bad["allocations"][0]["isbn"]="9780000000003"
         bad_path=isbn_td/"bad.yaml"; bad_path.write_text(yaml.safe_dump(bad,sort_keys=False,allow_unicode=True))
         assert run("isbn-validate",bad_path).returncode!=0
+        bad_target=copy.deepcopy(valid); bad_target["allocations"][0]["project"]="Unknown"
+        bad_target_path=isbn_td/"bad-target.yaml"; bad_target_path.write_text(yaml.safe_dump(bad_target,sort_keys=False,allow_unicode=True))
+        assert run("isbn-validate",bad_target_path).returncode!=0
         dup=copy.deepcopy(valid); dup["allocations"].append(copy.deepcopy(dup["allocations"][0]))
         dup_path=isbn_td/"duplicate.yaml"; dup_path.write_text(yaml.safe_dump(dup,sort_keys=False,allow_unicode=True))
         assert run("isbn-validate",dup_path).returncode!=0
