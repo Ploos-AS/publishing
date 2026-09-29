@@ -34,6 +34,7 @@ Recommended provenance fields are:
 
 ```yaml
 manifest_version: 1
+entry_point: ONIX_BookProduct_3.0_reference.xsd
 schema:
   release: "3.0"
   revision: 7
