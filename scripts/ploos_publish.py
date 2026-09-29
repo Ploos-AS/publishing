@@ -461,9 +461,10 @@ def onix_schema_bundle_verify(manifest_path):
         "ONIX_XHTML_Subset.xsd",
         "ONIX_XHTML_Subset_reference.xsd",
     }
-    recorded_paths=[record.get("path") for record in files if isinstance(record,dict) and record.get("path")]
-    recorded_files=set(recorded_paths)
-    if len(recorded_paths)!=len(recorded_files): failures.append("duplicate schema file record")
+    recorded_paths=[str(record.get("path")) for record in files if isinstance(record,dict) and record.get("path")]
+    normalized_paths=[Path(p).as_posix().removeprefix("./") for p in recorded_paths]
+    recorded_files=set(normalized_paths)
+    if len(normalized_paths)!=len(recorded_files): failures.append("duplicate schema file record")
     for required in sorted(required_files-recorded_files):
         failures.append(f"required schema file not recorded: {required}")
     schema=manifest.get("schema",{})
