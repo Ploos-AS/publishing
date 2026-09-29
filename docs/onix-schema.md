@@ -34,6 +34,8 @@ Additional files required by the official bundle may be retained alongside these
 
 The Deutsche Nationalbibliothek's 2026 ONIX 3.0 metadata documentation identifies the reference schema as `ONIX_BookProduct_3.0_reference.xsd`, ONIX International Book Product Information Message Schema, Release 3.0 Revision 7, revised 2020-05-18, and attributes it to EDItEUR. DNB also points implementers to EDItEUR's Release 3.0 downloads.
 
+DNB additionally identifies EDItEUR's Release 3.0 Downloads page (`/93/Release-3.0-Downloads/`) as the distribution location for the specification and related ONIX 3.0 material.
+
 This verifies the expected base-schema identity, but not the bytes of a local copy. The vendored file must therefore still be obtained through an authoritative distribution path and checksum-recorded before M3 qualification can claim XSD compliance.
 
 ## Source policy
