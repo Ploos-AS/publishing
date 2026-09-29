@@ -390,7 +390,24 @@ ONIX_LANG={"nb":"nor","nn":"nno","en":"eng"}
 ONIX_PRODUCT_FORM={"epub":"ED","pdf":"ED"}
 ONIX_PRODUCT_DETAIL={"epub":"E101","pdf":"E107"}
 
-def onix_validate_file(path):
+def onix_schema_validate(path,schema_path):
+    try:
+        from lxml import etree
+    except ImportError:
+        print("ERROR: lxml is required for ONIX XSD validation"); return 1
+    try:
+        schema_doc=etree.parse(str(schema_path))
+        schema=etree.XMLSchema(schema_doc)
+        document=etree.parse(str(path))
+    except Exception as exc:
+        print("ERROR: unable to load ONIX XML/XSD:",exc); return 1
+    if not schema.validate(document):
+        for error in schema.error_log:
+            print(f"ERROR: XSD line {error.line}: {error.message}")
+        return 1
+    print(f"ONIX XSD validation OK: {schema_path}"); return 0
+
+def onix_validate_file(path,schema_path=None):
     p=Path(path)
     try: root=ET.parse(p).getroot()
     except Exception as exc: print("ERROR: invalid ONIX XML:",exc); return 1
@@ -415,7 +432,10 @@ def onix_validate_file(path):
         req("o:PublishingDetail/o:Publisher/o:PublisherName","PublisherName")
     for e in errors: print("ERROR:",e)
     if errors: return 1
-    print(f"ONIX structural validation OK: {len(products)} product(s)"); return 0
+    print(f"ONIX structural validation OK: {len(products)} product(s)")
+    if schema_path:
+        return onix_schema_validate(p,Path(schema_path))
+    return 0
 
 def onix(metadata,language,product_name,output):
     data=load(metadata); errors=validate_data(data)
@@ -610,7 +630,7 @@ def main():
     am=sub.add_parser("archive"); am.add_argument("metadata"); am.add_argument("artifacts",nargs="*"); am.add_argument("-o","--output",default="archive-manifest.json")
     au=sub.add_parser("audit"); au.add_argument("manifest")
     ox=sub.add_parser("onix"); ox.add_argument("metadata"); ox.add_argument("--language",required=True); ox.add_argument("--product",required=True); ox.add_argument("-o","--output",default="onix.xml")
-    ov=sub.add_parser("onix-validate"); ov.add_argument("onix")
+    ov=sub.add_parser("onix-validate"); ov.add_argument("onix"); ov.add_argument("--schema")
     cat=sub.add_parser("catalog"); cat.add_argument("metadata",nargs="+"); cat.add_argument("-o","--output",default="catalog.json"); cat.add_argument("--include-unpublished",action="store_true")
     bs=sub.add_parser("books-site"); bs.add_argument("catalog"); bs.add_argument("--output-dir",default="dist/books")
     ld=sub.add_parser("legal-deposit"); ld.add_argument("metadata"); ld.add_argument("--status",choices=LEGAL_DEPOSIT_STATES); ld.add_argument("--artifact",action="append",default=[]); ld.add_argument("--reference"); ld.add_argument("--method"); ld.add_argument("--write",action="store_true")
@@ -633,7 +653,7 @@ def main():
     if a.cmd=="archive": return archive_manifest(a.metadata,a.artifacts,a.output)
     if a.cmd=="audit": return audit_archive(a.manifest)
     if a.cmd=="onix": return onix(a.metadata,a.language,a.product,a.output)
-    if a.cmd=="onix-validate": return onix_validate_file(a.onix)
+    if a.cmd=="onix-validate": return onix_validate_file(a.onix,a.schema)
     if a.cmd=="catalog": return catalog(a.metadata,a.output,a.include_unpublished)
     if a.cmd=="books-site": return books_site(a.catalog,a.output_dir)
     if a.cmd=="legal-deposit": return legal_deposit(a.metadata,a.status,a.artifact,a.reference,a.method,a.write)
