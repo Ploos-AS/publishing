@@ -242,6 +242,20 @@ def main():
         bad=copy.deepcopy(manifest_data); bad["sources"]["authoritative"]["authority"]="Mirror"
         bad_schema_manifest=schema_dir/"BAD-MANIFEST.yaml"; bad_schema_manifest.write_text(yaml.safe_dump(bad))
         assert run("onix-schema-verify",bad_schema_manifest).returncode!=0
+        bundle_dir=td/"valid-onix-bundle"; bundle_dir.mkdir()
+        entry=bundle_dir/"ONIX_BookProduct_3.0_reference.xsd"
+        entry.write_text("""<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"><xs:element name="root" type="xs:string"/></xs:schema>""")
+        bundle_records=[]
+        for name in required_schema_files:
+            p=bundle_dir/name
+            if name!=required_schema_files[0]: p.write_text("<schema/>")
+            bundle_records.append({"path":name,"sha256":hashlib.sha256(p.read_bytes()).hexdigest()})
+        bundle_manifest=bundle_dir/"MANIFEST.yaml"
+        bundle_manifest.write_text(yaml.safe_dump({"manifest_version":1,"entry_point":required_schema_files[0],"schema":{"release":"3.0","revision":7,"revised":"2020-05-18"},"codelists":{"issue":73},"sources":{"authoritative":{"authority":"EDItEUR","location":"https://www.editeur.org/93/Release-3.0-Downloads/","retrieved_at":"2026-09-29"}},"files":bundle_records}))
+        bundle_xml=td/"bundle.xml"; bundle_xml.write_text("<root>ok</root>")
+        assert run("onix-bundle-validate",bundle_xml,bundle_manifest).returncode==0
+        entry.write_text("<tampered/>")
+        assert run("onix-bundle-validate",bundle_xml,bundle_manifest).returncode!=0
         wrong_host=copy.deepcopy(manifest_data); wrong_host["sources"]["authoritative"]["location"]="https://example.invalid/onix.xsd"
         wrong_host_manifest=schema_dir/"WRONG-HOST-MANIFEST.yaml"; wrong_host_manifest.write_text(yaml.safe_dump(wrong_host))
         assert run("onix-schema-verify",wrong_host_manifest).returncode!=0
