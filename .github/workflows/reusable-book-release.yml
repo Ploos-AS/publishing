@@ -2,6 +2,9 @@ name: Reusable book release
 on:
   workflow_call:
     inputs:
+      publishing_ref:
+        type: string
+        default: main
       metadata:
         type: string
         default: publication.yaml
@@ -29,6 +32,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Ploos-AS/publishing
+          ref: ${{ inputs.publishing_ref }}
           path: .ploos-publishing
       - run: pip install -r .ploos-publishing/requirements.txt
       - name: Install publication build dependencies
