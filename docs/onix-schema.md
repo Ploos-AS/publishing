@@ -44,6 +44,12 @@ EDItEUR is the standards authority. A downstream distributor such as Bokbasen ma
 
 The schema files are standards material and are not covered by the repository's MIT software license. Preserve EDItEUR notices and applicable terms.
 
+## Norwegian production endpoint
+
+Bokbasen's public ONIX export documentation shows production messages with `xsi:schemaLocation` pointing to `https://api.boknett.no/schema/ONIX_BookProduct_3.0_reference.xsd`. This is useful independent evidence of the schema entry point used in the Norwegian book metadata ecosystem.
+
+Treat this as a downstream production copy, not as the standards authority. It may be used to compare a candidate EDItEUR bundle byte-for-byte or structurally, but Ploos must not relabel Bokbasen-hosted bytes as an EDItEUR distribution.
+
 ## Qualification
 
 Production ONIX qualification consists of:
