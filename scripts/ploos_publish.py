@@ -35,6 +35,7 @@ def isbn_registry_validate(path):
     if prefix_status=="assigned" and not publisher.get("publisher_prefix"):
         errors.append("publisher_prefix required when prefix_status is assigned")
     pool=data.get("isbn_pool",[])
+    if prefix_status=="pending" and pool: errors.append("isbn_pool must be empty while prefix_status is pending")
     for i,isbn in enumerate(pool):
         if not isbn13_valid(isbn): errors.append(f"isbn_pool {i}: invalid ISBN-13: {isbn}")
         else:
