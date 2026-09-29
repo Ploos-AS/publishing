@@ -32,6 +32,14 @@ jobs:
         run: |
           python scripts/ploos_publish.py onix-schema-verify vendor/onix/MANIFEST.yaml
           test -f vendor/onix/ONIX_BookProduct_3.0_reference.xsd
+          cp tests/fixtures/publication.yaml onix-publication.yaml
+          python - <<'PY'
+          from pathlib import Path
+          p=Path("onix-publication.yaml")
+          p.write_text(p.read_text().replace("PENDING", "9780000000002", 1))
+          PY
+          python scripts/ploos_publish.py onix onix-publication.yaml --language nb --product epub -o qualification-onix.xml
+          python scripts/ploos_publish.py onix-validate qualification-onix.xml --schema vendor/onix/ONIX_BookProduct_3.0_reference.xsd
       - name: Record M2 qualification candidate
         run: |
           mkdir -p qualification
