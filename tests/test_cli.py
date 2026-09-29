@@ -242,6 +242,12 @@ def main():
         insecure=copy.deepcopy(manifest_data); insecure["sources"]["authoritative"]["location"]="http://www.editeur.org/93/Release-3.0-Downloads/"
         insecure_manifest=schema_dir/"INSECURE-SOURCE-MANIFEST.yaml"; insecure_manifest.write_text(yaml.safe_dump(insecure))
         assert run("onix-schema-verify",insecure_manifest).returncode!=0
+        downstream=copy.deepcopy(manifest_data); downstream["sources"]["downstream_verification"]={"authority":"Bokbasen","location":"https://api.boknett.no/schema/ONIX_BookProduct_3.0_reference.xsd","sha256":"0"*64}
+        downstream_manifest=schema_dir/"DOWNSTREAM-MANIFEST.yaml"; downstream_manifest.write_text(yaml.safe_dump(downstream))
+        assert run("onix-schema-verify",downstream_manifest).returncode==0
+        bad_downstream=copy.deepcopy(downstream); bad_downstream["sources"]["downstream_verification"]["location"]="https://example.invalid/schema.xsd"
+        bad_downstream_manifest=schema_dir/"BAD-DOWNSTREAM-MANIFEST.yaml"; bad_downstream_manifest.write_text(yaml.safe_dump(bad_downstream))
+        assert run("onix-schema-verify",bad_downstream_manifest).returncode!=0
         bad_date=copy.deepcopy(manifest_data); bad_date["sources"]["authoritative"]["retrieved_at"]="not-a-date"
         bad_date_manifest=schema_dir/"BAD-DATE-MANIFEST.yaml"; bad_date_manifest.write_text(yaml.safe_dump(bad_date))
         assert run("onix-schema-verify",bad_date_manifest).returncode!=0
