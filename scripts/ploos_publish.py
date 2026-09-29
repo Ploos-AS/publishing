@@ -5,6 +5,7 @@ import argparse, hashlib, html, json, os, shutil, subprocess, zipfile
 from datetime import date
 from xml.etree import ElementTree as ET
 from pathlib import Path
+from urllib.parse import urlparse
 import yaml
 from PIL import Image, ImageOps
 from epub_qa import qa_epub
@@ -477,7 +478,15 @@ def onix_schema_bundle_verify(manifest_path):
     sources=manifest.get("sources",{})
     authoritative=sources.get("authoritative",{}) if isinstance(sources,dict) else {}
     if authoritative.get("authority")!="EDItEUR": failures.append("authoritative source must be EDItEUR")
-    if not authoritative.get("location"): failures.append("authoritative source location required")
+    location=authoritative.get("location")
+    if not location:
+        failures.append("authoritative source location required")
+    else:
+        parsed=urlparse(str(location))
+        host=(parsed.hostname or "").lower()
+        if parsed.scheme!="https": failures.append("authoritative source location must use HTTPS")
+        if host!="editeur.org" and not host.endswith(".editeur.org"):
+            failures.append("authoritative source location must be hosted by EDItEUR")
     retrieved_at=authoritative.get("retrieved_at")
     if not retrieved_at:
         failures.append("authoritative source retrieval date required")
