@@ -201,16 +201,25 @@ def main():
         assert run("provenance-verify",provenance).returncode==0
         # Pinned ONIX schema bundle integrity gate.
         schema_dir=td/"onix-schema"; schema_dir.mkdir()
-        schema_file=schema_dir/"fixture.xsd"; schema_file.write_text("<schema/>")
+        required_schema_files=["ONIX_BookProduct_3.0_reference.xsd","ONIX_BookProduct_CodeLists.xsd","ONIX_XHTML_Subset.xsd","ONIX_XHTML_Subset_reference.xsd"]
+        records=[]
+        for name in required_schema_files:
+            p=schema_dir/name; p.write_text("<schema/>")
+            records.append({"path":name,"sha256":hashlib.sha256(p.read_bytes()).hexdigest()})
+        schema_file=schema_dir/required_schema_files[0]
         schema_manifest=schema_dir/"MANIFEST.yaml"
-        schema_manifest.write_text(yaml.safe_dump({"schema":{"release":"3.0","revision":7,"revised":"2020-05-18"},"codelists":{"issue":73},"sources":{"authoritative":{"authority":"EDItEUR","location":"https://example.invalid/editeur-fixture","retrieved_at":"2026-09-29"}},"files":[{"path":"fixture.xsd","sha256":hashlib.sha256(schema_file.read_bytes()).hexdigest()}]}))
+        manifest_data={"schema":{"release":"3.0","revision":7,"revised":"2020-05-18"},"codelists":{"issue":73},"sources":{"authoritative":{"authority":"EDItEUR","location":"https://example.invalid/editeur-fixture","retrieved_at":"2026-09-29"}},"files":records}
+        schema_manifest.write_text(yaml.safe_dump(manifest_data))
         assert run("onix-schema-verify",schema_manifest).returncode==0
         schema_file.write_text("<schema>tampered</schema>")
         assert run("onix-schema-verify",schema_manifest).returncode!=0
         schema_file.write_text("<schema/>")
         assert run("onix-schema-verify",schema_manifest).returncode==0
-        bad_schema_manifest=schema_dir/"BAD-MANIFEST.yaml"
-        bad_schema_manifest.write_text(yaml.safe_dump({"schema":{"release":"3.0","revision":7,"revised":"2020-05-18"},"codelists":{"issue":73},"sources":{"authoritative":{"authority":"Mirror","location":"https://example.invalid/mirror","retrieved_at":"2026-09-29"}},"files":[{"path":"fixture.xsd","sha256":hashlib.sha256(schema_file.read_bytes()).hexdigest()}]}))
+        incomplete=copy.deepcopy(manifest_data); incomplete["files"]=incomplete["files"][:-1]
+        incomplete_manifest=schema_dir/"INCOMPLETE-MANIFEST.yaml"; incomplete_manifest.write_text(yaml.safe_dump(incomplete))
+        assert run("onix-schema-verify",incomplete_manifest).returncode!=0
+        bad=copy.deepcopy(manifest_data); bad["sources"]["authoritative"]["authority"]="Mirror"
+        bad_schema_manifest=schema_dir/"BAD-MANIFEST.yaml"; bad_schema_manifest.write_text(yaml.safe_dump(bad))
         assert run("onix-schema-verify",bad_schema_manifest).returncode!=0
         failed_report=td/"failed-qualification.json"; failed_report.write_text(json.dumps({"status":"FAIL"}))
         assert run("provenance",META,"--git-commit",fixture_commit,"--qualification",failed_report,"-o",td/"bad-provenance.json").returncode!=0
