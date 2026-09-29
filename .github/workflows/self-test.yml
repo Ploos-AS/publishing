@@ -42,13 +42,7 @@ jobs:
           p.write_text(p.read_text().replace("PENDING", "9780000000002", 1))
           PY
           python scripts/ploos_publish.py onix onix-publication.yaml --language nb --product epub -o qualification-onix.xml
-          ONIX_ENTRY_POINT="$(python - <<'PY'
-          import yaml
-          with open("vendor/onix/MANIFEST.yaml", encoding="utf-8") as fh:
-              print(yaml.safe_load(fh)["entry_point"])
-          PY
-          )"
-          python scripts/ploos_publish.py onix-validate qualification-onix.xml --schema "vendor/onix/$ONIX_ENTRY_POINT"
+          python scripts/ploos_publish.py onix-bundle-validate qualification-onix.xml vendor/onix/MANIFEST.yaml
       - name: Record M2 qualification candidate
         run: |
           mkdir -p qualification
