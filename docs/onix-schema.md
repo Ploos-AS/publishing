@@ -30,6 +30,12 @@ Additional files required by the official bundle may be retained alongside these
 
 `MANIFEST.yaml` records the source authority, base schema revision, codelist issue, retrieval date and SHA-256 for every vendored file. Qualification must fail if a recorded checksum does not match.
 
+## Verified schema identity
+
+The Deutsche Nationalbibliothek's 2026 ONIX 3.0 metadata documentation identifies the reference schema as `ONIX_BookProduct_3.0_reference.xsd`, ONIX International Book Product Information Message Schema, Release 3.0 Revision 7, revised 2020-05-18, and attributes it to EDItEUR. DNB also points implementers to EDItEUR's Release 3.0 downloads.
+
+This verifies the expected base-schema identity, but not the bytes of a local copy. The vendored file must therefore still be obtained through an authoritative distribution path and checksum-recorded before M3 qualification can claim XSD compliance.
+
 ## Source policy
 
 EDItEUR is the standards authority. A downstream distributor such as Bokbasen may be used to confirm which EDItEUR schema is in current production use, but a downstream copy must not be described as authored or published by EDItEUR unless its provenance is established.
