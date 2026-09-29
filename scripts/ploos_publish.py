@@ -461,7 +461,9 @@ def onix_schema_bundle_verify(manifest_path):
         "ONIX_XHTML_Subset.xsd",
         "ONIX_XHTML_Subset_reference.xsd",
     }
-    recorded_files={record.get("path") for record in files if isinstance(record,dict)}
+    recorded_paths=[record.get("path") for record in files if isinstance(record,dict) and record.get("path")]
+    recorded_files=set(recorded_paths)
+    if len(recorded_paths)!=len(recorded_files): failures.append("duplicate schema file record")
     for required in sorted(required_files-recorded_files):
         failures.append(f"required schema file not recorded: {required}")
     schema=manifest.get("schema",{})
@@ -478,6 +480,9 @@ def onix_schema_bundle_verify(manifest_path):
     for record in files:
         if not isinstance(record,dict) or not record.get("path") or not record.get("sha256"):
             failures.append("invalid file record"); continue
+        digest=str(record["sha256"])
+        if len(digest)!=64 or any(ch not in "0123456789abcdefABCDEF" for ch in digest):
+            failures.append(f"invalid sha256: {record['path']}"); continue
         rel=Path(str(record["path"]))
         if rel.is_absolute() or ".." in rel.parts:
             failures.append(f"unsafe schema path: {record['path']}"); continue
