@@ -41,6 +41,8 @@ def main():
         valid_path=isbn_td/"valid.yaml"; valid_path.write_text(yaml.safe_dump(valid,sort_keys=False,allow_unicode=True))
         assert run("isbn-validate",valid_path).returncode==0
         normalized_dup=copy.deepcopy(valid)
+        normalized_dup["publisher"]["prefix_status"]="assigned"
+        normalized_dup["publisher"]["publisher_prefix"]="978-82-00000"
         normalized_dup["isbn_pool"]=["978-0-00-000000-2"]
         normalized_dup_path=isbn_td/"normalized-duplicate.yaml"; normalized_dup_path.write_text(yaml.safe_dump(normalized_dup,sort_keys=False,allow_unicode=True))
         assert run("isbn-validate",normalized_dup_path).returncode==0
@@ -62,6 +64,9 @@ def main():
         registry_data["publisher"]["publisher_prefix"]="978-82-00000"
         registry.write_text(yaml.safe_dump(registry_data,sort_keys=False,allow_unicode=True))
         pool=isbn_td/"pool.txt"; pool.write_text("9780000000002\n9780000000019\n9780000000026\n")
+        pending_registry=isbn_td/"pending-registry.yaml"; pending_registry.write_text(ISBN_REGISTRY.read_text())
+        assert run("isbn-import",pending_registry,pool,"--write").returncode!=0
+        assert yaml.safe_load(pending_registry.read_text())["isbn_pool"]==[]
         assert run("isbn-import",registry,pool,"--write").returncode==0
         imported=yaml.safe_load(registry.read_text())
         assert imported["isbn_pool"]==["9780000000002","9780000000019","9780000000026"]
