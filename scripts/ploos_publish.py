@@ -15,8 +15,11 @@ LICENSE="CC-BY-4.0"
 LIFECYCLE_STATES=("draft","candidate","qualified","published","archived")
 LIFECYCLE_TRANSITIONS={"draft":{"candidate"},"candidate":{"draft","qualified"},"qualified":{"draft","published"},"published":{"archived"},"archived":set()}
 
+def normalize_isbn(value):
+    return str(value).replace("-","").replace(" ","")
+
 def isbn13_valid(value):
-    s=str(value).replace("-","").replace(" ","")
+    s=normalize_isbn(value)
     if len(s)!=13 or not s.isdigit() or not s.startswith(("978","979")): return False
     total=sum((1 if i%2==0 else 3)*int(d) for i,d in enumerate(s[:12]))
     return (10-(total%10))%10==int(s[12])
@@ -27,19 +30,23 @@ def isbn_registry_validate(path):
     pool=data.get("isbn_pool",[])
     for i,isbn in enumerate(pool):
         if not isbn13_valid(isbn): errors.append(f"isbn_pool {i}: invalid ISBN-13: {isbn}")
-        elif isbn in seen: errors.append(f"isbn_pool {i}: duplicate ISBN-13: {isbn}")
-        else: seen[isbn]="pool"
+        else:
+            normalized=normalize_isbn(isbn)
+            if normalized in seen: errors.append(f"isbn_pool {i}: duplicate ISBN-13: {isbn}")
+            else: seen[normalized]="pool"
     for i,a in enumerate(data.get("allocations",[])):
         isbn=a.get("isbn")
         if not isbn or isbn=="PENDING": errors.append(f"allocation {i}: ISBN must be assigned")
         elif not isbn13_valid(isbn): errors.append(f"allocation {i}: invalid ISBN-13: {isbn}")
-        elif isbn in seen and seen[isbn]!="pool": errors.append(f"allocation {i}: duplicate ISBN-13: {isbn}")
-        else: seen[isbn]=f"allocation {i}"
-        target=tuple(a.get(k) for k in ("project","language","product"))
-        for key,value in zip(("project","language","product"),target):
+        else:
+            normalized=normalize_isbn(isbn)
+            if normalized in seen and seen[normalized]!="pool": errors.append(f"allocation {i}: duplicate ISBN-13: {isbn}")
+            else: seen[normalized]=f"allocation {i}"
+        target=tuple(a.get(k) for k in ("project","edition","language","product"))
+        for key,value in zip(("project","edition","language","product"),target):
             if not value: errors.append(f"allocation {i}: missing {key}")
         if all(target):
-            if target in targets: errors.append(f"allocation {i}: duplicate target: {'/'.join(target)}")
+            if target in targets: errors.append(f"allocation {i}: duplicate target: {'/'.join(str(x) for x in target)}")
             targets[target]=i
     for e in errors: print("ERROR:",e)
     if errors: return 1
@@ -67,11 +74,11 @@ def isbn_import(registry,isbn_file,write=False):
         print(p)
     return 0
 
-def isbn_allocate(registry,project,language,product,write=False):
+def isbn_allocate(registry,project,edition,language,product,write=False):
     p=Path(registry); data=load(p)
-    target=(project,language,product)
+    target=(project,edition,language,product)
     for a in data.get("allocations",[]):
-        if tuple(a.get(k) for k in ("project","language","product"))==target:
+        if tuple(a.get(k) for k in ("project","edition","language","product"))==target:
             print(f"ERROR: target already allocated: {a.get('isbn')}"); return 1
     allocated={str(a.get("isbn")).replace("-","").replace(" ","") for a in data.get("allocations",[])}
     available=[str(x).replace("-","").replace(" ","") for x in data.get("isbn_pool",[]) if str(x).replace("-","").replace(" ","") not in allocated]
@@ -79,9 +86,9 @@ def isbn_allocate(registry,project,language,product,write=False):
         print("ERROR: no unallocated ISBNs in registry pool"); return 1
     isbn=available[0]
     if not isbn13_valid(isbn): print("ERROR: next ISBN in pool is invalid:",isbn); return 1
-    print(f"{project}/{language}/{product} -> {isbn}")
+    print(f"{project}/{edition}/{language}/{product} -> {isbn}")
     if write:
-        data.setdefault("allocations",[]).append({"isbn":isbn,"project":project,"language":language,"product":product})
+        data.setdefault("allocations",[]).append({"isbn":isbn,"project":project,"edition":edition,"language":language,"product":product})
         p.write_text(yaml.safe_dump(data,sort_keys=False,allow_unicode=True),encoding="utf-8")
         print(p)
     return 0
@@ -641,7 +648,7 @@ def main():
     v=sub.add_parser("validate"); v.add_argument("metadata")
     iv=sub.add_parser("isbn-validate"); iv.add_argument("registry")
     ii=sub.add_parser("isbn-import"); ii.add_argument("registry"); ii.add_argument("isbn_file"); ii.add_argument("--write",action="store_true")
-    ia=sub.add_parser("isbn-allocate"); ia.add_argument("registry"); ia.add_argument("--project",required=True); ia.add_argument("--language",required=True); ia.add_argument("--product",required=True); ia.add_argument("--write",action="store_true")
+    ia=sub.add_parser("isbn-allocate"); ia.add_argument("registry"); ia.add_argument("--project",required=True); ia.add_argument("--edition",required=True,type=int); ia.add_argument("--language",required=True); ia.add_argument("--product",required=True); ia.add_argument("--write",action="store_true")
     e=sub.add_parser("epubcheck"); e.add_argument("epub")
     m=sub.add_parser("manifest"); m.add_argument("metadata"); m.add_argument("artifacts",nargs="*"); m.add_argument("-o","--output",default="release-manifest.json")
     pr=sub.add_parser("provenance"); pr.add_argument("metadata"); pr.add_argument("--git-commit",required=True); pr.add_argument("--qualification",required=True); pr.add_argument("--artifact",action="append",default=[]); pr.add_argument("-o","--output",default="provenance.json")
@@ -666,7 +673,7 @@ def main():
     if a.cmd=="validate": return validate(a.metadata)
     if a.cmd=="isbn-validate": return isbn_registry_validate(a.registry)
     if a.cmd=="isbn-import": return isbn_import(a.registry,a.isbn_file,a.write)
-    if a.cmd=="isbn-allocate": return isbn_allocate(a.registry,a.project,a.language,a.product,a.write)
+    if a.cmd=="isbn-allocate": return isbn_allocate(a.registry,a.project,a.edition,a.language,a.product,a.write)
     if a.cmd=="epubcheck": return epubcheck(a.epub)
     if a.cmd=="manifest": return manifest(a.metadata,a.output,a.artifacts)
     if a.cmd=="provenance": return provenance(a.metadata,a.git_commit,a.qualification,a.artifact,a.output)
