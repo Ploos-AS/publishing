@@ -390,6 +390,29 @@ ONIX_LANG={"nb":"nor","nn":"nno","en":"eng"}
 ONIX_PRODUCT_FORM={"epub":"ED","pdf":"ED"}
 ONIX_PRODUCT_DETAIL={"epub":"E101","pdf":"E107"}
 
+def onix_schema_bundle_verify(manifest_path):
+    manifest_path=Path(manifest_path)
+    if not manifest_path.is_file():
+        print("ERROR: ONIX schema manifest not found:",manifest_path); return 1
+    try: manifest=yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
+    except Exception as exc: print("ERROR: invalid ONIX schema manifest:",exc); return 1
+    files=manifest.get("files")
+    if not isinstance(files,list) or not files:
+        print("ERROR: ONIX schema manifest has no files"); return 1
+    failures=[]
+    for record in files:
+        if not isinstance(record,dict) or not record.get("path") or not record.get("sha256"):
+            failures.append("invalid file record"); continue
+        p=manifest_path.parent/record["path"]
+        if not p.is_file(): failures.append(f"missing {record['path']}"); continue
+        actual=sha256(p)
+        if actual.lower()!=str(record["sha256"]).lower():
+            failures.append(f"sha256 mismatch: {record['path']}")
+    for failure in failures: print("ERROR:",failure)
+    if failures: return 1
+    print(f"ONIX schema bundle OK: {len(files)} file(s)")
+    return 0
+
 def onix_schema_validate(path,schema_path):
     try:
         from lxml import etree
@@ -631,6 +654,7 @@ def main():
     au=sub.add_parser("audit"); au.add_argument("manifest")
     ox=sub.add_parser("onix"); ox.add_argument("metadata"); ox.add_argument("--language",required=True); ox.add_argument("--product",required=True); ox.add_argument("-o","--output",default="onix.xml")
     ov=sub.add_parser("onix-validate"); ov.add_argument("onix"); ov.add_argument("--schema")
+    osb=sub.add_parser("onix-schema-verify"); osb.add_argument("manifest")
     cat=sub.add_parser("catalog"); cat.add_argument("metadata",nargs="+"); cat.add_argument("-o","--output",default="catalog.json"); cat.add_argument("--include-unpublished",action="store_true")
     bs=sub.add_parser("books-site"); bs.add_argument("catalog"); bs.add_argument("--output-dir",default="dist/books")
     ld=sub.add_parser("legal-deposit"); ld.add_argument("metadata"); ld.add_argument("--status",choices=LEGAL_DEPOSIT_STATES); ld.add_argument("--artifact",action="append",default=[]); ld.add_argument("--reference"); ld.add_argument("--method"); ld.add_argument("--write",action="store_true")
@@ -654,6 +678,7 @@ def main():
     if a.cmd=="audit": return audit_archive(a.manifest)
     if a.cmd=="onix": return onix(a.metadata,a.language,a.product,a.output)
     if a.cmd=="onix-validate": return onix_validate_file(a.onix,a.schema)
+    if a.cmd=="onix-schema-verify": return onix_schema_bundle_verify(a.manifest)
     if a.cmd=="catalog": return catalog(a.metadata,a.output,a.include_unpublished)
     if a.cmd=="books-site": return books_site(a.catalog,a.output_dir)
     if a.cmd=="legal-deposit": return legal_deposit(a.metadata,a.status,a.artifact,a.reference,a.method,a.write)
