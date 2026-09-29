@@ -201,14 +201,14 @@ def main():
         assert run("provenance-verify",provenance).returncode==0
         # Pinned ONIX schema bundle integrity gate.
         schema_dir=td/"onix-schema"; schema_dir.mkdir()
-        required_schema_files=["ONIX_BookProduct_3.0_reference.xsd","ONIX_BookProduct_CodeLists.xsd","ONIX_XHTML_Subset.xsd","ONIX_XHTML_Subset_reference.xsd"]
+        required_schema_files=["ONIX_BookProduct_3.0_reference.xsd","ONIX_BookProduct_CodeLists.xsd","ONIX_XHTML_Subset.xsd","ONIX_BookProduct_3.0_short.xsd"]
         records=[]
         for name in required_schema_files:
             p=schema_dir/name; p.write_text("<schema/>")
             records.append({"path":name,"sha256":hashlib.sha256(p.read_bytes()).hexdigest()})
         schema_file=schema_dir/required_schema_files[0]
         schema_manifest=schema_dir/"MANIFEST.yaml"
-        manifest_data={"manifest_version":1,"entry_point":"ONIX_BookProduct_3.0_reference.xsd","schema":{"release":"3.0","revision":7,"revised":"2020-05-18"},"codelists":{"issue":73},"sources":{"authoritative":{"authority":"EDItEUR","location":"https://www.editeur.org/93/Release-3.0-Downloads/","retrieved_at":"2026-09-29"}},"files":records}
+        manifest_data={"manifest_version":1,"entry_point":"ONIX_BookProduct_3.0_reference.xsd","schema":{"release":"3.0","revision":7,"revised":"2020-05-18"},"codelists":{"issue":74},"sources":{"authoritative":{"authority":"EDItEUR","location":"https://www.editeur.org/93/Release-3.0-Downloads/","retrieved_at":"2026-09-29"}},"files":records}
         schema_manifest.write_text(yaml.safe_dump(manifest_data))
         assert run("onix-schema-verify",schema_manifest).returncode==0
         unsupported=copy.deepcopy(manifest_data); unsupported["manifest_version"]=2
@@ -251,12 +251,12 @@ def main():
             if name!=required_schema_files[0]: p.write_text("<schema/>")
             bundle_records.append({"path":name,"sha256":hashlib.sha256(p.read_bytes()).hexdigest()})
         bundle_manifest=bundle_dir/"MANIFEST.yaml"
-        bundle_manifest.write_text(yaml.safe_dump({"manifest_version":1,"entry_point":required_schema_files[0],"schema":{"release":"3.0","revision":7,"revised":"2020-05-18"},"codelists":{"issue":73},"sources":{"authoritative":{"authority":"EDItEUR","location":"https://www.editeur.org/93/Release-3.0-Downloads/","retrieved_at":"2026-09-29"}},"files":bundle_records}))
+        bundle_manifest.write_text(yaml.safe_dump({"manifest_version":1,"entry_point":required_schema_files[0],"schema":{"release":"3.0","revision":7,"revised":"2020-05-18"},"codelists":{"issue":74},"sources":{"authoritative":{"authority":"EDItEUR","location":"https://www.editeur.org/93/Release-3.0-Downloads/","retrieved_at":"2026-09-29"}},"files":bundle_records}))
         bundle_xml=td/"bundle.xml"
         bundle_xml.write_text("""<ONIXMessage xmlns="http://ns.editeur.org/onix/3.0/reference" release="3.0"><Product><RecordReference>fixture</RecordReference><NotificationType>03</NotificationType><ProductIdentifier><IDValue>9780000000002</IDValue></ProductIdentifier><DescriptiveDetail><ProductForm>ED</ProductForm><TitleDetail><TitleElement><TitleText>Fixture</TitleText></TitleElement></TitleDetail><Contributor><ContributorRole>A01</ContributorRole></Contributor><Language><LanguageCode>eng</LanguageCode></Language></DescriptiveDetail><PublishingDetail><Publisher><PublisherName>Ploos AS</PublisherName></Publisher></PublishingDetail></Product></ONIXMessage>""")
         entry.write_text("""<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://ns.editeur.org/onix/3.0/reference" xmlns="http://ns.editeur.org/onix/3.0/reference" elementFormDefault="qualified"><xs:element name="ONIXMessage" type="xs:anyType"/></xs:schema>""")
         bundle_records[0]["sha256"]=hashlib.sha256(entry.read_bytes()).hexdigest()
-        bundle_manifest.write_text(yaml.safe_dump({"manifest_version":1,"entry_point":required_schema_files[0],"schema":{"release":"3.0","revision":7,"revised":"2020-05-18"},"codelists":{"issue":73},"sources":{"authoritative":{"authority":"EDItEUR","location":"https://www.editeur.org/93/Release-3.0-Downloads/","retrieved_at":"2026-09-29"}},"files":bundle_records}))
+        bundle_manifest.write_text(yaml.safe_dump({"manifest_version":1,"entry_point":required_schema_files[0],"schema":{"release":"3.0","revision":7,"revised":"2020-05-18"},"codelists":{"issue":74},"sources":{"authoritative":{"authority":"EDItEUR","location":"https://www.editeur.org/93/Release-3.0-Downloads/","retrieved_at":"2026-09-29"}},"files":bundle_records}))
         assert run("onix-bundle-validate",bundle_xml,bundle_manifest).returncode==0
         entry.write_text("<tampered/>")
         assert run("onix-bundle-validate",bundle_xml,bundle_manifest).returncode!=0
