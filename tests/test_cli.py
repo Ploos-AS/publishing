@@ -218,6 +218,9 @@ def main():
         incomplete=copy.deepcopy(manifest_data); incomplete["files"]=incomplete["files"][:-1]
         incomplete_manifest=schema_dir/"INCOMPLETE-MANIFEST.yaml"; incomplete_manifest.write_text(yaml.safe_dump(incomplete))
         assert run("onix-schema-verify",incomplete_manifest).returncode!=0
+        unsafe=copy.deepcopy(manifest_data); unsafe["files"][0]["path"]="../outside.xsd"
+        unsafe_manifest=schema_dir/"UNSAFE-MANIFEST.yaml"; unsafe_manifest.write_text(yaml.safe_dump(unsafe))
+        assert run("onix-schema-verify",unsafe_manifest).returncode!=0
         bad=copy.deepcopy(manifest_data); bad["sources"]["authoritative"]["authority"]="Mirror"
         bad_schema_manifest=schema_dir/"BAD-MANIFEST.yaml"; bad_schema_manifest.write_text(yaml.safe_dump(bad))
         assert run("onix-schema-verify",bad_schema_manifest).returncode!=0
