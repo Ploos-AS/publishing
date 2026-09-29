@@ -76,6 +76,15 @@ def isbn_import(registry,isbn_file,write=False):
 
 def isbn_allocate(registry,project,edition,language,product,write=False):
     p=Path(registry); data=load(p)
+    if edition < 1:
+        print("ERROR: edition must be a positive integer"); return 1
+    publication=next((x for x in data.get("publications",[]) if x.get("project")==project),None)
+    if publication is None:
+        print(f"ERROR: unknown project: {project}"); return 1
+    if language not in publication.get("titles",{}):
+        print(f"ERROR: unsupported language for {project}: {language}"); return 1
+    if product not in ("epub","pdf"):
+        print(f"ERROR: unsupported ISBN product: {product}"); return 1
     target=(project,edition,language,product)
     for a in data.get("allocations",[]):
         if tuple(a.get(k) for k in ("project","edition","language","product"))==target:
