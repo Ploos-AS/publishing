@@ -455,6 +455,17 @@ def onix_schema_bundle_verify(manifest_path):
     if not isinstance(files,list) or not files:
         print("ERROR: ONIX schema manifest has no files"); return 1
     failures=[]
+    schema=manifest.get("schema",{})
+    if str(schema.get("release"))!="3.0": failures.append("schema.release must be 3.0")
+    if schema.get("revision")!=7: failures.append("schema.revision must be 7")
+    if str(schema.get("revised"))!="2020-05-18": failures.append("schema.revised must be 2020-05-18")
+    codelists=manifest.get("codelists",{})
+    if codelists.get("issue")!=73: failures.append("codelists.issue must be 73")
+    sources=manifest.get("sources",{})
+    authoritative=sources.get("authoritative",{}) if isinstance(sources,dict) else {}
+    if authoritative.get("authority")!="EDItEUR": failures.append("authoritative source must be EDItEUR")
+    if not authoritative.get("location"): failures.append("authoritative source location required")
+    if not authoritative.get("retrieved_at"): failures.append("authoritative source retrieval date required")
     for record in files:
         if not isinstance(record,dict) or not record.get("path") or not record.get("sha256"):
             failures.append("invalid file record"); continue
