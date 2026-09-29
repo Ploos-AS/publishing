@@ -478,7 +478,10 @@ def onix_schema_bundle_verify(manifest_path):
     for record in files:
         if not isinstance(record,dict) or not record.get("path") or not record.get("sha256"):
             failures.append("invalid file record"); continue
-        p=manifest_path.parent/record["path"]
+        rel=Path(str(record["path"]))
+        if rel.is_absolute() or ".." in rel.parts:
+            failures.append(f"unsafe schema path: {record['path']}"); continue
+        p=manifest_path.parent/rel
         if not p.is_file(): failures.append(f"missing {record['path']}"); continue
         actual=sha256(p)
         if actual.lower()!=str(record["sha256"]).lower():
