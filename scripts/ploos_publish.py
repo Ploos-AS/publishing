@@ -455,6 +455,15 @@ def onix_schema_bundle_verify(manifest_path):
     if not isinstance(files,list) or not files:
         print("ERROR: ONIX schema manifest has no files"); return 1
     failures=[]
+    required_files={
+        "ONIX_BookProduct_3.0_reference.xsd",
+        "ONIX_BookProduct_CodeLists.xsd",
+        "ONIX_XHTML_Subset.xsd",
+        "ONIX_XHTML_Subset_reference.xsd",
+    }
+    recorded_files={record.get("path") for record in files if isinstance(record,dict)}
+    for required in sorted(required_files-recorded_files):
+        failures.append(f"required schema file not recorded: {required}")
     schema=manifest.get("schema",{})
     if str(schema.get("release"))!="3.0": failures.append("schema.release must be 3.0")
     if schema.get("revision")!=7: failures.append("schema.revision must be 7")
