@@ -457,6 +457,7 @@ def onix_schema_bundle_verify(manifest_path):
     if not isinstance(files,list) or not files:
         print("ERROR: ONIX schema manifest has no files"); return 1
     failures=[]
+    if manifest.get("manifest_version")!=1: failures.append("manifest_version must be 1")
     required_files={
         "ONIX_BookProduct_3.0_reference.xsd",
         "ONIX_BookProduct_CodeLists.xsd",
