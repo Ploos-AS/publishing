@@ -33,6 +33,7 @@ Additional files required by the official bundle may be retained alongside these
 Recommended provenance fields are:
 
 ```yaml
+manifest_version: 1
 schema:
   release: "3.0"
   revision: 7
@@ -54,7 +55,7 @@ files:
     sha256: <checksum>
 ```
 
-A downstream checksum may corroborate the vendored bytes, but cannot replace authoritative provenance. If authoritative and downstream copies are both retrieved, record whether their SHA-256 values are identical; never silently substitute one for the other.
+A downstream checksum may corroborate the vendored bytes, but cannot replace authoritative provenance. `manifest_version: 1` identifies this contract; incompatible manifest-format changes must increment the version and require explicit verifier support. If authoritative and downstream copies are both retrieved, record whether their SHA-256 values are identical; never silently substitute one for the other.
 
 ## Verified schema identity
 
