@@ -224,6 +224,9 @@ def main():
         duplicate=copy.deepcopy(manifest_data); duplicate["files"].append(copy.deepcopy(duplicate["files"][0]))
         duplicate_manifest=schema_dir/"DUPLICATE-MANIFEST.yaml"; duplicate_manifest.write_text(yaml.safe_dump(duplicate))
         assert run("onix-schema-verify",duplicate_manifest).returncode!=0
+        alias=copy.deepcopy(manifest_data); alias["files"].append(copy.deepcopy(alias["files"][0])); alias["files"][-1]["path"]="./"+alias["files"][-1]["path"]
+        alias_manifest=schema_dir/"ALIAS-MANIFEST.yaml"; alias_manifest.write_text(yaml.safe_dump(alias))
+        assert run("onix-schema-verify",alias_manifest).returncode!=0
         invalid_hash=copy.deepcopy(manifest_data); invalid_hash["files"][0]["sha256"]="not-a-sha256"
         invalid_hash_manifest=schema_dir/"INVALID-HASH-MANIFEST.yaml"; invalid_hash_manifest.write_text(yaml.safe_dump(invalid_hash))
         assert run("onix-schema-verify",invalid_hash_manifest).returncode!=0
