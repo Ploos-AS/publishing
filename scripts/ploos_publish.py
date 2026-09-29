@@ -487,6 +487,22 @@ def onix_schema_bundle_verify(manifest_path):
         if parsed.scheme!="https": failures.append("authoritative source location must use HTTPS")
         if host!="editeur.org" and not host.endswith(".editeur.org"):
             failures.append("authoritative source location must be hosted by EDItEUR")
+    downstream=sources.get("downstream_verification") if isinstance(sources,dict) else None
+    if downstream is not None:
+        if not isinstance(downstream,dict):
+            failures.append("downstream verification must be a mapping")
+        else:
+            if downstream.get("authority")!="Bokbasen": failures.append("downstream verification authority must be Bokbasen")
+            downstream_location=downstream.get("location")
+            if not downstream_location:
+                failures.append("downstream verification location required")
+            else:
+                parsed=urlparse(str(downstream_location)); host=(parsed.hostname or "").lower()
+                if parsed.scheme!="https": failures.append("downstream verification location must use HTTPS")
+                if host!="api.boknett.no": failures.append("downstream verification location must use api.boknett.no")
+            downstream_digest=str(downstream.get("sha256",""))
+            if len(downstream_digest)!=64 or any(ch not in "0123456789abcdefABCDEF" for ch in downstream_digest):
+                failures.append("downstream verification sha256 invalid")
     retrieved_at=authoritative.get("retrieved_at")
     if not retrieved_at:
         failures.append("authoritative source retrieval date required")
