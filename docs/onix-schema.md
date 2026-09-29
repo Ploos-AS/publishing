@@ -30,6 +30,31 @@ Additional files required by the official bundle may be retained alongside these
 
 `MANIFEST.yaml` records the source authority, base schema revision, codelist issue, retrieval date and SHA-256 for every vendored file. Qualification must fail if a recorded checksum does not match.
 
+Recommended provenance fields are:
+
+```yaml
+schema:
+  release: "3.0"
+  revision: 7
+  revised: "2020-05-18"
+codelists:
+  issue: 73
+sources:
+  authoritative:
+    authority: EDItEUR
+    location: <recorded distribution URL>
+    retrieved_at: <date>
+  downstream_verification:
+    authority: Bokbasen
+    location: <recorded production schema URL>
+    sha256: <checksum when retrieved>
+files:
+  - path: ONIX_BookProduct_3.0_reference.xsd
+    sha256: <checksum>
+```
+
+A downstream checksum may corroborate the vendored bytes, but cannot replace authoritative provenance. If authoritative and downstream copies are both retrieved, record whether their SHA-256 values are identical; never silently substitute one for the other.
+
 ## Verified schema identity
 
 The Deutsche Nationalbibliothek's 2026 ONIX 3.0 metadata documentation identifies the reference schema as `ONIX_BookProduct_3.0_reference.xsd`, ONIX International Book Product Information Message Schema, Release 3.0 Revision 7, revised 2020-05-18, and attributes it to EDItEUR. DNB also points implementers to EDItEUR's Release 3.0 downloads.
