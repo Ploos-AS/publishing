@@ -506,6 +506,8 @@ def onix_schema_bundle_verify(manifest_path):
             downstream_file=downstream.get("file")
             if not downstream_file:
                 failures.append("downstream verification file required")
+            elif downstream_file!="ONIX_BookProduct_3.0_reference.xsd":
+                failures.append("downstream verification must target ONIX reference schema entry point")
             elif downstream_file not in recorded_files:
                 failures.append("downstream verification file not recorded")
             else:
