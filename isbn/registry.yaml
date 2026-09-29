@@ -18,63 +18,54 @@ publications:
     titles:
       nb: Tallsystemer
       en: Number Systems
-    isbn: PENDING
     status: planned
 
   - project: EduBoolean
     titles:
       nb: Boolsk algebra
       en: Boolean Algebra
-    isbn: PENDING
     status: planned
 
   - project: EduFSM
     titles:
       nb: Tilstandsmaskiner
       en: State Machines
-    isbn: PENDING
     status: planned
 
   - project: EduCPU
     titles:
       nb: Slik virker en prosessor
       en: How a Processor Works
-    isbn: PENDING
     status: planned
 
   - project: EduAVR
     titles:
       nb: AVR fra grunnen av
       en: AVR from the Ground Up
-    isbn: PENDING
     status: planned
 
   - project: Edu8051
     titles:
       nb: 8051 fra grunnen av
       en: 8051 from the Ground Up
-    isbn: PENDING
     status: planned
 
   - project: EduPython-Kids
     titles:
       nb: Python for barn
       en: Python for Kids
-    isbn: PENDING
     status: planned
 
   - project: EduPython-Senior
     titles:
       nb: Python for seniorer
       en: Python for Seniors
-    isbn: PENDING
     status: planned
 
   - project: C64-Codecraft
     titles:
       nb: C64 Codecraft
       en: C64 Codecraft
-    isbn: PENDING
     status: planned
 
 isbn_pool: []
