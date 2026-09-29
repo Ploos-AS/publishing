@@ -159,6 +159,16 @@ def main():
         assert run("provenance-verify",provenance).returncode!=0
         epub.write_bytes(original_epub)
         assert run("provenance-verify",provenance).returncode==0
+        # Pinned ONIX schema bundle integrity gate.
+        schema_dir=td/"onix-schema"; schema_dir.mkdir()
+        schema_file=schema_dir/"fixture.xsd"; schema_file.write_text("<schema/>")
+        schema_manifest=schema_dir/"MANIFEST.yaml"
+        schema_manifest.write_text(yaml.safe_dump({"files":[{"path":"fixture.xsd","sha256":hashlib.sha256(schema_file.read_bytes()).hexdigest()}]}))
+        assert run("onix-schema-verify",schema_manifest).returncode==0
+        schema_file.write_text("<schema>tampered</schema>")
+        assert run("onix-schema-verify",schema_manifest).returncode!=0
+        schema_file.write_text("<schema/>")
+        assert run("onix-schema-verify",schema_manifest).returncode==0
         failed_report=td/"failed-qualification.json"; failed_report.write_text(json.dumps({"status":"FAIL"}))
         assert run("provenance",META,"--git-commit",fixture_commit,"--qualification",failed_report,"-o",td/"bad-provenance.json").returncode!=0
         cfg=td/"package.yaml"
