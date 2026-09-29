@@ -31,6 +31,12 @@ def main():
     with tempfile.TemporaryDirectory() as isbn_td:
         isbn_td=Path(isbn_td)
         valid=yaml.safe_load(ISBN_REGISTRY.read_text())
+        bad_prefix=copy.deepcopy(valid); bad_prefix["publisher"]["prefix_status"]="assigned"
+        bad_prefix_path=isbn_td/"bad-prefix.yaml"; bad_prefix_path.write_text(yaml.safe_dump(bad_prefix,sort_keys=False,allow_unicode=True))
+        assert run("isbn-validate",bad_prefix_path).returncode!=0
+        assigned=copy.deepcopy(valid); assigned["publisher"]["prefix_status"]="assigned"; assigned["publisher"]["publisher_prefix"]="978-82-00000"
+        assigned_path=isbn_td/"assigned-prefix.yaml"; assigned_path.write_text(yaml.safe_dump(assigned,sort_keys=False,allow_unicode=True))
+        assert run("isbn-validate",assigned_path).returncode==0
         valid["allocations"]=[{"isbn":"9780000000002","project":"EduNumbers","edition":1,"language":"nb","product":"epub"}]
         valid_path=isbn_td/"valid.yaml"; valid_path.write_text(yaml.safe_dump(valid,sort_keys=False,allow_unicode=True))
         assert run("isbn-validate",valid_path).returncode==0
