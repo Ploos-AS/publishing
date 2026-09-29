@@ -484,9 +484,11 @@ def onix_schema_bundle_verify(manifest_path):
         digest=str(record["sha256"])
         if len(digest)!=64 or any(ch not in "0123456789abcdefABCDEF" for ch in digest):
             failures.append(f"invalid sha256: {record['path']}"); continue
-        rel=Path(str(record["path"]))
-        if rel.is_absolute() or ".." in rel.parts:
-            failures.append(f"unsafe schema path: {record['path']}"); continue
+        raw_path=str(record["path"])
+        rel=Path(raw_path)
+        canonical=rel.as_posix()
+        if rel.is_absolute() or ".." in rel.parts or "\\" in raw_path or raw_path.startswith("./") or canonical!=raw_path:
+            failures.append(f"non-canonical schema path: {record['path']}"); continue
         p=manifest_path.parent/rel
         if not p.is_file(): failures.append(f"missing {record['path']}"); continue
         actual=sha256(p)
