@@ -31,7 +31,7 @@ def main():
     with tempfile.TemporaryDirectory() as isbn_td:
         isbn_td=Path(isbn_td)
         valid=yaml.safe_load(ISBN_REGISTRY.read_text())
-        valid["allocations"]=[{"isbn":"9780000000002","project":"Fixture","edition":1,"language":"nb","product":"epub"}]
+        valid["allocations"]=[{"isbn":"9780000000002","project":"EduNumbers","edition":1,"language":"nb","product":"epub"}]
         valid_path=isbn_td/"valid.yaml"; valid_path.write_text(yaml.safe_dump(valid,sort_keys=False,allow_unicode=True))
         assert run("isbn-validate",valid_path).returncode==0
         normalized_dup=copy.deepcopy(valid)
