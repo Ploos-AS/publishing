@@ -16,6 +16,29 @@ project + edition + language + product
 
 For example, Norwegian EPUB and PDF editions are separate products, and a second edition is distinct from the first edition.
 
+## Publisher-prefix state
+
+The registry starts in the conservative state:
+
+```yaml
+prefix_status: pending
+publisher_prefix: null
+isbn_pool: []
+```
+
+The production sequence is deliberately one-way operationally:
+
+```text
+pending
+  -> record the official Ploos AS publisher prefix
+assigned
+  -> import official ISBNs
+isbn_pool populated
+  -> allocate by project + edition + language + product
+```
+
+`isbn-import` refuses to run while the prefix is pending. Registry validation also rejects a non-empty ISBN pool in that state. Importing ISBNs does not itself change agency status; the official prefix assignment must be recorded explicitly from the agency information.
+
 ## Normalization
 
 ISBN comparisons remove spaces and hyphens before checksum and uniqueness checks. Therefore formatted and compact spellings of the same ISBN cannot be allocated as separate identifiers.
