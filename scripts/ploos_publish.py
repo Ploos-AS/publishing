@@ -503,6 +503,15 @@ def onix_schema_bundle_verify(manifest_path):
             downstream_digest=str(downstream.get("sha256",""))
             if len(downstream_digest)!=64 or any(ch not in "0123456789abcdefABCDEF" for ch in downstream_digest):
                 failures.append("downstream verification sha256 invalid")
+            downstream_file=downstream.get("file")
+            if not downstream_file:
+                failures.append("downstream verification file required")
+            elif downstream_file not in recorded_files:
+                failures.append("downstream verification file not recorded")
+            else:
+                target=manifest_path.parent/str(downstream_file)
+                if target.is_file() and sha256(target).lower()!=downstream_digest.lower():
+                    failures.append("downstream verification sha256 does not match vendored file")
     retrieved_at=authoritative.get("retrieved_at")
     if not retrieved_at:
         failures.append("authoritative source retrieval date required")
