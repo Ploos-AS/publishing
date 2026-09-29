@@ -28,6 +28,7 @@ def make_epub(path):
 def main():
     assert run("validate",META).returncode==0
     assert run("isbn-validate",ISBN_REGISTRY).returncode==0
+    assert run("isbn-metadata-check",ISBN_REGISTRY,META).returncode==0
     with tempfile.TemporaryDirectory() as isbn_td:
         isbn_td=Path(isbn_td)
         valid=yaml.safe_load(ISBN_REGISTRY.read_text())
@@ -84,6 +85,14 @@ def main():
         assert run("isbn-allocate",registry,"--project","EduNumbers","--edition","1","--language","xx","--product","epub").returncode!=0
         assert run("isbn-allocate",registry,"--project","EduNumbers","--edition","1","--language","nb","--product","web").returncode!=0
         assert run("isbn-validate",registry).returncode==0
+        synced_meta=isbn_td/"synced-metadata.yaml"; synced=copy.deepcopy(base)
+        synced["project"]="EduNumbers"; synced["edition"]["number"]=1
+        synced["publications"]["nb"]["products"]["epub"]["isbn"]="9780000000002"
+        synced_meta.write_text(yaml.safe_dump(synced,sort_keys=False,allow_unicode=True))
+        assert run("isbn-metadata-check",registry,synced_meta).returncode==0
+        mismatched=copy.deepcopy(synced); mismatched["publications"]["nb"]["products"]["epub"]["isbn"]="9780000000095"
+        mismatch_meta=isbn_td/"mismatch-metadata.yaml"; mismatch_meta.write_text(yaml.safe_dump(mismatched,sort_keys=False,allow_unicode=True))
+        assert run("isbn-metadata-check",registry,mismatch_meta).returncode!=0
     base=yaml.safe_load(META.read_text())
     with tempfile.TemporaryDirectory() as policy_td:
         policy_td=Path(policy_td)
