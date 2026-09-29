@@ -5,6 +5,9 @@ on:
       publishing_ref:
         type: string
         default: main
+      isbn_registry:
+        type: string
+        default: ""
       metadata:
         required: false
         type: string
@@ -32,6 +35,9 @@ jobs:
           ref: ${{ inputs.publishing_ref }}
           path: .ploos-publishing
       - run: pip install -r .ploos-publishing/requirements.txt
+      - name: Cross-check ISBN registry
+        if: inputs.isbn_registry != ''
+        run: python .ploos-publishing/scripts/ploos_publish.py isbn-metadata-check "${{ inputs.isbn_registry }}" "${{ inputs.metadata }}"
       - name: Validate publication metadata
         run: python .ploos-publishing/scripts/ploos_publish.py validate "${{ inputs.metadata }}"
       - name: Install EPUBCheck
