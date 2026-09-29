@@ -546,6 +546,12 @@ def onix_schema_bundle_verify(manifest_path):
     print(f"ONIX schema bundle OK: {len(files)} file(s)")
     return 0
 
+def onix_bundle_validate(path,manifest_path):
+    manifest_path=Path(manifest_path)
+    if onix_schema_bundle_verify(manifest_path)!=0: return 1
+    manifest=yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
+    return onix_validate_file(path,manifest_path.parent/manifest["entry_point"])
+
 def onix_schema_validate(path,schema_path):
     try:
         from lxml import etree
@@ -789,6 +795,7 @@ def main():
     ox=sub.add_parser("onix"); ox.add_argument("metadata"); ox.add_argument("--language",required=True); ox.add_argument("--product",required=True); ox.add_argument("-o","--output",default="onix.xml")
     ov=sub.add_parser("onix-validate"); ov.add_argument("onix"); ov.add_argument("--schema")
     osb=sub.add_parser("onix-schema-verify"); osb.add_argument("manifest")
+    obv=sub.add_parser("onix-bundle-validate"); obv.add_argument("onix"); obv.add_argument("manifest")
     cat=sub.add_parser("catalog"); cat.add_argument("metadata",nargs="+"); cat.add_argument("-o","--output",default="catalog.json"); cat.add_argument("--include-unpublished",action="store_true")
     bs=sub.add_parser("books-site"); bs.add_argument("catalog"); bs.add_argument("--output-dir",default="dist/books")
     ld=sub.add_parser("legal-deposit"); ld.add_argument("metadata"); ld.add_argument("--status",choices=LEGAL_DEPOSIT_STATES); ld.add_argument("--artifact",action="append",default=[]); ld.add_argument("--reference"); ld.add_argument("--method"); ld.add_argument("--write",action="store_true")
@@ -814,6 +821,7 @@ def main():
     if a.cmd=="onix": return onix(a.metadata,a.language,a.product,a.output)
     if a.cmd=="onix-validate": return onix_validate_file(a.onix,a.schema)
     if a.cmd=="onix-schema-verify": return onix_schema_bundle_verify(a.manifest)
+    if a.cmd=="onix-bundle-validate": return onix_bundle_validate(a.onix,a.manifest)
     if a.cmd=="catalog": return catalog(a.metadata,a.output,a.include_unpublished)
     if a.cmd=="books-site": return books_site(a.catalog,a.output_dir)
     if a.cmd=="legal-deposit": return legal_deposit(a.metadata,a.status,a.artifact,a.reference,a.method,a.write)
