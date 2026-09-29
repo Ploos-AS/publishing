@@ -32,6 +32,9 @@ jobs:
         run: |
           python scripts/ploos_publish.py onix-schema-verify vendor/onix/MANIFEST.yaml
           test -f vendor/onix/ONIX_BookProduct_3.0_reference.xsd
+          test -f vendor/onix/ONIX_BookProduct_CodeLists.xsd
+          test -f vendor/onix/ONIX_XHTML_Subset.xsd
+          test -f vendor/onix/ONIX_XHTML_Subset_reference.xsd
           cp tests/fixtures/publication.yaml onix-publication.yaml
           python - <<'PY'
           from pathlib import Path
