@@ -52,14 +52,18 @@ def main():
         assert run("isbn-import",registry,pool,"--write").returncode==0
         imported=yaml.safe_load(registry.read_text())
         assert imported["isbn_pool"]==["9780000000002","9780000000019","9780000000026"]
-        assert run("isbn-allocate",registry,"--project","Fixture","--edition","1","--language","nb","--product","epub","--write").returncode==0
+        assert run("isbn-allocate",registry,"--project","EduNumbers","--edition","1","--language","nb","--product","epub","--write").returncode==0
         allocated=yaml.safe_load(registry.read_text())
         assert allocated["allocations"][0]["isbn"]=="9780000000002"
-        assert run("isbn-allocate",registry,"--project","Fixture","--edition","1","--language","nb","--product","epub","--write").returncode!=0
-        assert run("isbn-allocate",registry,"--project","Fixture","--edition","2","--language","nb","--product","epub","--write").returncode==0
-        assert run("isbn-allocate",registry,"--project","Fixture","--edition","1","--language","en","--product","epub","--write").returncode==0
+        assert run("isbn-allocate",registry,"--project","EduNumbers","--edition","1","--language","nb","--product","epub","--write").returncode!=0
+        assert run("isbn-allocate",registry,"--project","EduNumbers","--edition","2","--language","nb","--product","epub","--write").returncode==0
+        assert run("isbn-allocate",registry,"--project","EduNumbers","--edition","1","--language","en","--product","epub","--write").returncode==0
         assert yaml.safe_load(registry.read_text())["allocations"][1]["isbn"]=="9780000000019"
-        assert run("isbn-allocate",registry,"--project","Fixture","--edition","1","--language","nb","--product","pdf","--write").returncode!=0
+        assert run("isbn-allocate",registry,"--project","EduNumbers","--edition","1","--language","nb","--product","pdf","--write").returncode!=0
+        assert run("isbn-allocate",registry,"--project","Unknown","--edition","1","--language","nb","--product","epub").returncode!=0
+        assert run("isbn-allocate",registry,"--project","EduNumbers","--edition","0","--language","nb","--product","epub").returncode!=0
+        assert run("isbn-allocate",registry,"--project","EduNumbers","--edition","1","--language","xx","--product","epub").returncode!=0
+        assert run("isbn-allocate",registry,"--project","EduNumbers","--edition","1","--language","nb","--product","web").returncode!=0
         assert run("isbn-validate",registry).returncode==0
     base=yaml.safe_load(META.read_text())
     with tempfile.TemporaryDirectory() as policy_td:
