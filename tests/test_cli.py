@@ -208,12 +208,15 @@ def main():
             records.append({"path":name,"sha256":hashlib.sha256(p.read_bytes()).hexdigest()})
         schema_file=schema_dir/required_schema_files[0]
         schema_manifest=schema_dir/"MANIFEST.yaml"
-        manifest_data={"manifest_version":1,"schema":{"release":"3.0","revision":7,"revised":"2020-05-18"},"codelists":{"issue":73},"sources":{"authoritative":{"authority":"EDItEUR","location":"https://www.editeur.org/93/Release-3.0-Downloads/","retrieved_at":"2026-09-29"}},"files":records}
+        manifest_data={"manifest_version":1,"entry_point":"ONIX_BookProduct_3.0_reference.xsd","schema":{"release":"3.0","revision":7,"revised":"2020-05-18"},"codelists":{"issue":73},"sources":{"authoritative":{"authority":"EDItEUR","location":"https://www.editeur.org/93/Release-3.0-Downloads/","retrieved_at":"2026-09-29"}},"files":records}
         schema_manifest.write_text(yaml.safe_dump(manifest_data))
         assert run("onix-schema-verify",schema_manifest).returncode==0
         unsupported=copy.deepcopy(manifest_data); unsupported["manifest_version"]=2
         unsupported_manifest=schema_dir/"UNSUPPORTED-VERSION-MANIFEST.yaml"; unsupported_manifest.write_text(yaml.safe_dump(unsupported))
         assert run("onix-schema-verify",unsupported_manifest).returncode!=0
+        bad_entry=copy.deepcopy(manifest_data); bad_entry["entry_point"]="ONIX_BookProduct_CodeLists.xsd"
+        bad_entry_manifest=schema_dir/"BAD-ENTRY-MANIFEST.yaml"; bad_entry_manifest.write_text(yaml.safe_dump(bad_entry))
+        assert run("onix-schema-verify",bad_entry_manifest).returncode!=0
         schema_file.write_text("<schema>tampered</schema>")
         assert run("onix-schema-verify",schema_manifest).returncode!=0
         schema_file.write_text("<schema/>")
