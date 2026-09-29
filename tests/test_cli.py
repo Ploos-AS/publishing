@@ -48,10 +48,10 @@ def main():
         dup_path=isbn_td/"duplicate.yaml"; dup_path.write_text(yaml.safe_dump(dup,sort_keys=False,allow_unicode=True))
         assert run("isbn-validate",dup_path).returncode!=0
         registry=isbn_td/"registry.yaml"; registry.write_text(ISBN_REGISTRY.read_text())
-        pool=isbn_td/"pool.txt"; pool.write_text("9780000000002\n9780000000019\n")
+        pool=isbn_td/"pool.txt"; pool.write_text("9780000000002\n9780000000019\n9780000000026\n")
         assert run("isbn-import",registry,pool,"--write").returncode==0
         imported=yaml.safe_load(registry.read_text())
-        assert imported["isbn_pool"]==["9780000000002","9780000000019"]
+        assert imported["isbn_pool"]==["9780000000002","9780000000019","9780000000026"]
         assert run("isbn-allocate",registry,"--project","Fixture","--edition","1","--language","nb","--product","epub","--write").returncode==0
         allocated=yaml.safe_load(registry.read_text())
         assert allocated["allocations"][0]["isbn"]=="9780000000002"
