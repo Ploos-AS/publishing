@@ -463,7 +463,7 @@ def onix_schema_bundle_verify(manifest_path):
         "ONIX_BookProduct_3.0_reference.xsd",
         "ONIX_BookProduct_CodeLists.xsd",
         "ONIX_XHTML_Subset.xsd",
-        "ONIX_XHTML_Subset_reference.xsd",
+        "ONIX_BookProduct_3.0_short.xsd",
     }
     recorded_paths=[str(record.get("path")) for record in files if isinstance(record,dict) and record.get("path")]
     normalized_paths=[Path(p).as_posix().removeprefix("./") for p in recorded_paths]
@@ -476,7 +476,7 @@ def onix_schema_bundle_verify(manifest_path):
     if schema.get("revision")!=7: failures.append("schema.revision must be 7")
     if str(schema.get("revised"))!="2020-05-18": failures.append("schema.revised must be 2020-05-18")
     codelists=manifest.get("codelists",{})
-    if codelists.get("issue")!=73: failures.append("codelists.issue must be 73")
+    if codelists.get("issue")!=74: failures.append("codelists.issue must be 73")
     sources=manifest.get("sources",{})
     authoritative=sources.get("authoritative",{}) if isinstance(sources,dict) else {}
     if authoritative.get("authority")!="EDItEUR": failures.append("authoritative source must be EDItEUR")
