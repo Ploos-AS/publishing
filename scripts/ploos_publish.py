@@ -34,6 +34,7 @@ def isbn_registry_validate(path):
             normalized=normalize_isbn(isbn)
             if normalized in seen: errors.append(f"isbn_pool {i}: duplicate ISBN-13: {isbn}")
             else: seen[normalized]="pool"
+    publications={x.get("project"):x for x in data.get("publications",[]) if x.get("project")}
     for i,a in enumerate(data.get("allocations",[])):
         isbn=a.get("isbn")
         if not isbn or isbn=="PENDING": errors.append(f"allocation {i}: ISBN must be assigned")
@@ -48,6 +49,13 @@ def isbn_registry_validate(path):
         if all(target):
             if target in targets: errors.append(f"allocation {i}: duplicate target: {'/'.join(str(x) for x in target)}")
             targets[target]=i
+        project,edition,language,product=target
+        publication=publications.get(project)
+        if publication is None: errors.append(f"allocation {i}: unknown project: {project}")
+        else:
+            if language not in publication.get("titles",{}): errors.append(f"allocation {i}: unsupported language for {project}: {language}")
+        if not isinstance(edition,int) or edition < 1: errors.append(f"allocation {i}: edition must be a positive integer")
+        if product not in ("epub","pdf"): errors.append(f"allocation {i}: unsupported ISBN product: {product}")
     for e in errors: print("ERROR:",e)
     if errors: return 1
     print(f"ISBN registry validation OK: {len(data.get('allocations',[]))} allocations, {len(pool)} pool entries"); return 0
