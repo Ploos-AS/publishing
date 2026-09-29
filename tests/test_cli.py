@@ -55,6 +55,7 @@ def main():
         assert run("isbn-import",registry,pool,"--write").returncode==0
         imported=yaml.safe_load(registry.read_text())
         assert imported["isbn_pool"]==["9780000000002","9780000000019","9780000000026"]
+        assert imported["publisher"]["prefix_status"]=="pending"
         assert run("isbn-allocate",registry,"--project","EduNumbers","--edition","1","--language","nb","--product","epub","--write").returncode==0
         allocated=yaml.safe_load(registry.read_text())
         assert allocated["allocations"][0]["isbn"]=="9780000000002"
