@@ -2,6 +2,7 @@
 """Ploos Publishing CLI."""
 from __future__ import annotations
 import argparse, hashlib, html, json, os, shutil, subprocess, zipfile
+from datetime import date
 from xml.etree import ElementTree as ET
 from pathlib import Path
 import yaml
@@ -477,7 +478,15 @@ def onix_schema_bundle_verify(manifest_path):
     authoritative=sources.get("authoritative",{}) if isinstance(sources,dict) else {}
     if authoritative.get("authority")!="EDItEUR": failures.append("authoritative source must be EDItEUR")
     if not authoritative.get("location"): failures.append("authoritative source location required")
-    if not authoritative.get("retrieved_at"): failures.append("authoritative source retrieval date required")
+    retrieved_at=authoritative.get("retrieved_at")
+    if not retrieved_at:
+        failures.append("authoritative source retrieval date required")
+    else:
+        try:
+            retrieved_date=date.fromisoformat(str(retrieved_at))
+            if retrieved_date>date.today(): failures.append("authoritative source retrieval date cannot be in the future")
+        except ValueError:
+            failures.append("authoritative source retrieval date must be ISO YYYY-MM-DD")
     for record in files:
         if not isinstance(record,dict) or not record.get("path") or not record.get("sha256"):
             failures.append("invalid file record"); continue
