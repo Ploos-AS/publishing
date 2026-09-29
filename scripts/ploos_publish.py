@@ -26,7 +26,14 @@ def isbn13_valid(value):
 
 def isbn_registry_validate(path):
     data=load(path); errors=[]; seen={}; targets={}
-    if data.get("publisher",{}).get("name")!=PUBLISHER: errors.append("invalid publisher")
+    publisher=data.get("publisher",{})
+    if publisher.get("name")!=PUBLISHER: errors.append("invalid publisher")
+    prefix_status=publisher.get("prefix_status")
+    if prefix_status not in ("pending","assigned"): errors.append(f"invalid publisher prefix_status: {prefix_status}")
+    if prefix_status=="pending" and publisher.get("publisher_prefix") is not None:
+        errors.append("publisher_prefix must be null while prefix_status is pending")
+    if prefix_status=="assigned" and not publisher.get("publisher_prefix"):
+        errors.append("publisher_prefix required when prefix_status is assigned")
     pool=data.get("isbn_pool",[])
     for i,isbn in enumerate(pool):
         if not isbn13_valid(isbn): errors.append(f"isbn_pool {i}: invalid ISBN-13: {isbn}")
