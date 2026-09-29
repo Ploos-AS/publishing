@@ -120,6 +120,27 @@ def isbn_allocate(registry,project,edition,language,product,write=False):
         print(p)
     return 0
 
+def isbn_metadata_check(registry,metadata):
+    reg=load(registry); meta=load(metadata); errors=[]
+    project=meta.get("project")
+    edition=meta.get("edition",{}).get("number")
+    allocations={(a.get("project"),a.get("edition"),a.get("language"),a.get("product")):normalize_isbn(a.get("isbn"))
+                 for a in reg.get("allocations",[]) if a.get("isbn") and a.get("isbn")!="PENDING"}
+    for language,pub in meta.get("publications",{}).items():
+        for product,details in pub.get("products",{}).items():
+            if product=="web": continue
+            value=details.get("isbn")
+            allocated=allocations.get((project,edition,language,product))
+            if allocated:
+                if value=="PENDING": errors.append(f"{language}/{product}: registry has allocated ISBN {allocated} but metadata is PENDING")
+                elif not isbn13_valid(value) or normalize_isbn(value)!=allocated:
+                    errors.append(f"{language}/{product}: metadata ISBN does not match registry allocation")
+            elif value!="PENDING":
+                errors.append(f"{language}/{product}: metadata has ISBN but registry has no allocation")
+    for e in errors: print("ERROR:",e)
+    if errors: return 1
+    print("ISBN metadata cross-check OK"); return 0
+
 def load(path):
     return yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
 
@@ -674,6 +695,7 @@ def main():
     sub=ap.add_subparsers(dest="cmd",required=True)
     v=sub.add_parser("validate"); v.add_argument("metadata")
     iv=sub.add_parser("isbn-validate"); iv.add_argument("registry")
+    imc=sub.add_parser("isbn-metadata-check"); imc.add_argument("registry"); imc.add_argument("metadata")
     ii=sub.add_parser("isbn-import"); ii.add_argument("registry"); ii.add_argument("isbn_file"); ii.add_argument("--write",action="store_true")
     ia=sub.add_parser("isbn-allocate"); ia.add_argument("registry"); ia.add_argument("--project",required=True); ia.add_argument("--edition",required=True,type=int); ia.add_argument("--language",required=True); ia.add_argument("--product",required=True); ia.add_argument("--write",action="store_true")
     e=sub.add_parser("epubcheck"); e.add_argument("epub")
@@ -699,6 +721,7 @@ def main():
     a=ap.parse_args()
     if a.cmd=="validate": return validate(a.metadata)
     if a.cmd=="isbn-validate": return isbn_registry_validate(a.registry)
+    if a.cmd=="isbn-metadata-check": return isbn_metadata_check(a.registry,a.metadata)
     if a.cmd=="isbn-import": return isbn_import(a.registry,a.isbn_file,a.write)
     if a.cmd=="isbn-allocate": return isbn_allocate(a.registry,a.project,a.edition,a.language,a.product,a.write)
     if a.cmd=="epubcheck": return epubcheck(a.epub)
