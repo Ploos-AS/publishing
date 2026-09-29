@@ -85,7 +85,7 @@ def main():
         assert run("isbn-allocate",registry,"--project","EduNumbers","--edition","1","--language","xx","--product","epub").returncode!=0
         assert run("isbn-allocate",registry,"--project","EduNumbers","--edition","1","--language","nb","--product","web").returncode!=0
         assert run("isbn-validate",registry).returncode==0
-        synced_meta=isbn_td/"synced-metadata.yaml"; synced=copy.deepcopy(base)
+        synced_meta=isbn_td/"synced-metadata.yaml"; synced=yaml.safe_load(META.read_text())
         synced["project"]="EduNumbers"; synced["edition"]["number"]=1
         synced["publications"]["nb"]["products"]["epub"]["isbn"]="9780000000002"
         synced_meta.write_text(yaml.safe_dump(synced,sort_keys=False,allow_unicode=True))
