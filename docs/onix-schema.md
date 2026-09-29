@@ -7,9 +7,9 @@ Ploos Publishing validates ONIX with a local schema bundle. Network downloads ar
 The bundle is treated as two independently versioned inputs:
 
 1. **ONIX 3.0 base schema** — Release 3.0 Revision 7 (`ONIX_BookProduct_3.0_reference.xsd`).
-2. **ONIX codelist schema module** — Issue 73 for the current Norwegian baseline, subject to provenance verification against the authoritative EDItEUR bundle.
+2. **ONIX codelist schema module** — Issue 74 for the current Norwegian baseline, subject to provenance verification against the authoritative EDItEUR bundle.
 
-For the current Norwegian publishing baseline, the reviewed codelist issue is **Issue 73**, published by Bokbasen on 2026-04-22. Bokbasen states that ONIX codelists are updated four times per year. This records the Norwegian integration baseline; the vendored schema module must still have authoritative EDItEUR provenance.
+The authoritative EDItEUR bundle supplied for M3 qualification contains **Codelists Issue 74**. M3 therefore pins Issue 74 to the reviewed upstream distribution rather than the earlier downstream Issue 73 baseline.
 
 The base schema revision and codelist issue must both be recorded. Updating a codelist module is therefore an explicit publishing-toolchain change even when the ONIX 3.0 base schema revision is unchanged.
 
@@ -23,7 +23,7 @@ vendor/onix/
   ONIX_BookProduct_3.0_reference.xsd
   ONIX_BookProduct_CodeLists.xsd
   ONIX_XHTML_Subset.xsd
-  ONIX_XHTML_Subset_reference.xsd
+  ONIX_BookProduct_3.0_short.xsd
 ```
 
 Additional files required by the official bundle may be retained alongside these files.
@@ -40,7 +40,7 @@ schema:
   revision: 7
   revised: "2020-05-18"
 codelists:
-  issue: 73
+  issue: 74
 sources:
   authoritative:
     authority: EDItEUR
