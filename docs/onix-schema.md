@@ -47,6 +47,7 @@ sources:
   downstream_verification:
     authority: Bokbasen
     location: <recorded production schema URL>
+    file: ONIX_BookProduct_3.0_reference.xsd
     sha256: <checksum when retrieved>
 files:
   - path: ONIX_BookProduct_3.0_reference.xsd
