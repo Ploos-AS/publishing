@@ -77,7 +77,6 @@ def isbn_import(registry,isbn_file,write=False):
     print(f"ISBN import: {len(normalized)} supplied, {len(merged)-len(pool)} new")
     if write:
         data["isbn_pool"]=merged
-        data.setdefault("publisher",{})["prefix_status"]="assigned"
         p.write_text(yaml.safe_dump(data,sort_keys=False,allow_unicode=True),encoding="utf-8")
         print(p)
     return 0
