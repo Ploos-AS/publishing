@@ -12,7 +12,7 @@ This repository is the canonical source for:
 
 - publishing policy and edition rules
 - ISBN allocation and status
-- reusable `book.yaml` metadata schema/examples
+- reusable canonical `publication.yaml` metadata contract and example
 - colophon/front-matter templates
 - language and format conventions
 - CI validation rules for book repositories
@@ -41,8 +41,9 @@ publishing/
 ├── isbn/
 │   └── registry.yaml
 ├── metadata/
-│   ├── book.schema.yaml
-│   └── book.example.yaml
+│   ├── publication.example.yaml   # canonical v1 metadata shape
+│   ├── book.schema.yaml           # legacy pre-v1 format
+│   └── book.example.yaml          # legacy pre-v1 example
 └── templates/
     └── colophon.md
 ```
@@ -62,3 +63,12 @@ Publishing-capable PLOOS-PROJECT-1 consumers use the versioned reusable workflow
 ## Canonicality
 
 `main` is canonical. Project repositories should consume or copy versioned publishing metadata/templates from this repository rather than inventing incompatible local conventions.
+
+
+## Publication metadata contract
+
+The canonical consumer metadata file is `publication.yaml`, following `metadata/publication.example.yaml` and validated by `scripts/ploos_publish.py validate`.
+
+`metadata/book.schema.yaml` and `metadata/book.example.yaml` describe the earlier pre-v1 metadata shape. They are retained temporarily for migration/reference only and must not be used for new PLOOS-PROJECT-1 consumers.
+
+The v1 contract uses per-language entries under `publications:`, an explicit `work.id`, structured `edition` data, lifecycle state, and per-language/per-product ISBN status.
