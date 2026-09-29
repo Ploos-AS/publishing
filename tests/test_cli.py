@@ -221,6 +221,12 @@ def main():
         unsafe=copy.deepcopy(manifest_data); unsafe["files"][0]["path"]="../outside.xsd"
         unsafe_manifest=schema_dir/"UNSAFE-MANIFEST.yaml"; unsafe_manifest.write_text(yaml.safe_dump(unsafe))
         assert run("onix-schema-verify",unsafe_manifest).returncode!=0
+        duplicate=copy.deepcopy(manifest_data); duplicate["files"].append(copy.deepcopy(duplicate["files"][0]))
+        duplicate_manifest=schema_dir/"DUPLICATE-MANIFEST.yaml"; duplicate_manifest.write_text(yaml.safe_dump(duplicate))
+        assert run("onix-schema-verify",duplicate_manifest).returncode!=0
+        invalid_hash=copy.deepcopy(manifest_data); invalid_hash["files"][0]["sha256"]="not-a-sha256"
+        invalid_hash_manifest=schema_dir/"INVALID-HASH-MANIFEST.yaml"; invalid_hash_manifest.write_text(yaml.safe_dump(invalid_hash))
+        assert run("onix-schema-verify",invalid_hash_manifest).returncode!=0
         bad=copy.deepcopy(manifest_data); bad["sources"]["authoritative"]["authority"]="Mirror"
         bad_schema_manifest=schema_dir/"BAD-MANIFEST.yaml"; bad_schema_manifest.write_text(yaml.safe_dump(bad))
         assert run("onix-schema-verify",bad_schema_manifest).returncode!=0
