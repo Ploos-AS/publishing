@@ -2,6 +2,9 @@ name: Reusable book validation
 on:
   workflow_call:
     inputs:
+      publishing_ref:
+        type: string
+        default: main
       metadata:
         required: false
         type: string
@@ -26,6 +29,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Ploos-AS/publishing
+          ref: ${{ inputs.publishing_ref }}
           path: .ploos-publishing
       - run: pip install -r .ploos-publishing/requirements.txt
       - name: Validate publication metadata
