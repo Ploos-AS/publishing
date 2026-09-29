@@ -82,10 +82,10 @@ Treat this as a downstream production copy, not as the standards authority. It m
 
 Production ONIX qualification consists of:
 
-1. verify the pinned bundle against `MANIFEST.yaml`;
-2. generate ONIX;
-3. run the internal structural checks;
-4. validate the generated XML with the pinned XSD entry point;
-5. retain the schema identity/checksums with qualification evidence.
+1. generate ONIX;
+2. run `python scripts/ploos_publish.py onix-bundle-validate <onix.xml> vendor/onix/MANIFEST.yaml`;
+3. retain the schema identity/checksums with qualification evidence.
 
-M3 is not complete until this sequence passes in CI using a reviewed bundle.
+`onix-bundle-validate` is the canonical production validation path. It verifies the manifest contract, provenance, required files and SHA-256 integrity, runs the internal ONIX structural checks, resolves the declared bundle entry point, and performs XSD validation. Do not replace it with a direct `onix-validate --schema ...` call for production qualification.
+
+M3 is not complete until this sequence passes in CI using a reviewed authoritative bundle.
