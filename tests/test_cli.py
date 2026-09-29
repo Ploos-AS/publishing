@@ -31,9 +31,16 @@ def main():
     with tempfile.TemporaryDirectory() as isbn_td:
         isbn_td=Path(isbn_td)
         valid=yaml.safe_load(ISBN_REGISTRY.read_text())
-        valid["allocations"]=[{"isbn":"9780000000002","project":"Fixture","language":"nb","product":"epub"}]
+        valid["allocations"]=[{"isbn":"9780000000002","project":"Fixture","edition":1,"language":"nb","product":"epub"}]
         valid_path=isbn_td/"valid.yaml"; valid_path.write_text(yaml.safe_dump(valid,sort_keys=False,allow_unicode=True))
         assert run("isbn-validate",valid_path).returncode==0
+        normalized_dup=copy.deepcopy(valid)
+        normalized_dup["isbn_pool"]=["978-0-00-000000-2"]
+        normalized_dup_path=isbn_td/"normalized-duplicate.yaml"; normalized_dup_path.write_text(yaml.safe_dump(normalized_dup,sort_keys=False,allow_unicode=True))
+        assert run("isbn-validate",normalized_dup_path).returncode==0
+        normalized_dup["allocations"].append({"isbn":"9780000000002","project":"Other","edition":1,"language":"en","product":"pdf"})
+        normalized_dup_path.write_text(yaml.safe_dump(normalized_dup,sort_keys=False,allow_unicode=True))
+        assert run("isbn-validate",normalized_dup_path).returncode!=0
         bad=copy.deepcopy(valid); bad["allocations"][0]["isbn"]="9780000000003"
         bad_path=isbn_td/"bad.yaml"; bad_path.write_text(yaml.safe_dump(bad,sort_keys=False,allow_unicode=True))
         assert run("isbn-validate",bad_path).returncode!=0
@@ -45,13 +52,14 @@ def main():
         assert run("isbn-import",registry,pool,"--write").returncode==0
         imported=yaml.safe_load(registry.read_text())
         assert imported["isbn_pool"]==["9780000000002","9780000000019"]
-        assert run("isbn-allocate",registry,"--project","Fixture","--language","nb","--product","epub","--write").returncode==0
+        assert run("isbn-allocate",registry,"--project","Fixture","--edition","1","--language","nb","--product","epub","--write").returncode==0
         allocated=yaml.safe_load(registry.read_text())
         assert allocated["allocations"][0]["isbn"]=="9780000000002"
-        assert run("isbn-allocate",registry,"--project","Fixture","--language","nb","--product","epub","--write").returncode!=0
-        assert run("isbn-allocate",registry,"--project","Fixture","--language","en","--product","epub","--write").returncode==0
+        assert run("isbn-allocate",registry,"--project","Fixture","--edition","1","--language","nb","--product","epub","--write").returncode!=0
+        assert run("isbn-allocate",registry,"--project","Fixture","--edition","2","--language","nb","--product","epub","--write").returncode==0
+        assert run("isbn-allocate",registry,"--project","Fixture","--edition","1","--language","en","--product","epub","--write").returncode==0
         assert yaml.safe_load(registry.read_text())["allocations"][1]["isbn"]=="9780000000019"
-        assert run("isbn-allocate",registry,"--project","Fixture","--language","nb","--product","pdf","--write").returncode!=0
+        assert run("isbn-allocate",registry,"--project","Fixture","--edition","1","--language","nb","--product","pdf","--write").returncode!=0
         assert run("isbn-validate",registry).returncode==0
     base=yaml.safe_load(META.read_text())
     with tempfile.TemporaryDirectory() as policy_td:
