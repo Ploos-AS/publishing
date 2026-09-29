@@ -19,7 +19,7 @@ properties:
     type: object
     required: [documentation]
     properties:
-      documentation: {const: "CC-BY-4.0"}
+      documentation: {enum: ["CC-BY-4.0", "CC-BY-SA-4.0"]}
     additionalProperties: true
   title:
     type: object
