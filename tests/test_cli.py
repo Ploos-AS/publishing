@@ -236,6 +236,12 @@ def main():
         bad=copy.deepcopy(manifest_data); bad["sources"]["authoritative"]["authority"]="Mirror"
         bad_schema_manifest=schema_dir/"BAD-MANIFEST.yaml"; bad_schema_manifest.write_text(yaml.safe_dump(bad))
         assert run("onix-schema-verify",bad_schema_manifest).returncode!=0
+        bad_date=copy.deepcopy(manifest_data); bad_date["sources"]["authoritative"]["retrieved_at"]="not-a-date"
+        bad_date_manifest=schema_dir/"BAD-DATE-MANIFEST.yaml"; bad_date_manifest.write_text(yaml.safe_dump(bad_date))
+        assert run("onix-schema-verify",bad_date_manifest).returncode!=0
+        future_date=copy.deepcopy(manifest_data); future_date["sources"]["authoritative"]["retrieved_at"]="2999-01-01"
+        future_date_manifest=schema_dir/"FUTURE-DATE-MANIFEST.yaml"; future_date_manifest.write_text(yaml.safe_dump(future_date))
+        assert run("onix-schema-verify",future_date_manifest).returncode!=0
         failed_report=td/"failed-qualification.json"; failed_report.write_text(json.dumps({"status":"FAIL"}))
         assert run("provenance",META,"--git-commit",fixture_commit,"--qualification",failed_report,"-o",td/"bad-provenance.json").returncode!=0
         cfg=td/"package.yaml"
