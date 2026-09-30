@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ploos.no/schemas/student-oci-1.json",
+  "title": "PLOOS-STUDENT-OCI-1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema",
+    "contract",
+    "course",
+    "workspace",
+    "image",
+    "target",
+    "commands",
+    "runtime",
+    "requires_private_infrastructure",
+    "restricted_payloads",
+    "release"
+  ],
+  "properties": {
+    "schema": {
+      "const": 1
+    },
+    "contract": {
+      "const": "PLOOS-STUDENT-OCI-1"
+    },
+    "course": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workspace": {
+      "const": "/course"
+    },
+    "image": {
+      "type": "string",
+      "pattern": "^ghcr\\.io/ploos-as/[a-z0-9._-]+-student$"
+    },
+    "target": {
+      "type": "string",
+      "minLength": 1
+    },
+    "commands": {
+      "type": "object",
+      "required": [
+        "info",
+        "check"
+      ],
+      "properties": {
+        "info": {
+          "const": "student-env-info"
+        },
+        "check": {
+          "const": "student-check"
+        }
+      }
+    },
+    "runtime": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "docker",
+          "podman"
+        ]
+      }
+    },
+    "requires_private_infrastructure": {
+      "const": false
+    },
+    "restricted_payloads": {
+      "const": false
+    },
+    "release": {
+      "type": "object",
+      "required": [
+        "development_tag",
+        "immutable_tag_prefix",
+        "semver"
+      ],
+      "properties": {
+        "development_tag": {
+          "const": "edge"
+        },
+        "immutable_tag_prefix": {
+          "const": "sha-"
+        },
+        "semver": {
+          "const": true
+        }
+      }
+    }
+  }
+}
