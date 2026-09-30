@@ -64,6 +64,7 @@ A project may implement any combination of these capabilities:
 - `fpga`: FPGA target
 - `publishing`: publication outputs
 - `website`: generated web edition
+- `student-oci`: reproducible learner-facing OCI environment conforming to `PLOOS-STUDENT-OCI-1`
 
 Capabilities describe requirements; they do not force empty directories.
 
@@ -106,6 +107,12 @@ jobs:
 Production projects must use a qualified stable major tag, not `@main`.
 
 A qualification pass means the checks configured by that workflow passed for the exact project revision. It must not be described as proving properties that were not tested.
+
+## Student environment contract
+
+Practical courses that declare the `student-oci` capability implement [PLOOS-STUDENT-OCI-1](PLOOS-STUDENT-OCI-1.md). The course repository plus Docker or Podman must be sufficient for the supported learner path, without private Ploos infrastructure or restricted payloads.
+
+Student OCI qualification is separate from stronger platform, emulator, runtime or hardware qualification where those capabilities apply.
 
 ## Publishing contract
 
