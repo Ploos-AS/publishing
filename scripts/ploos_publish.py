@@ -780,13 +780,15 @@ def paperback_geometry(page_count, config, output):
     trim=cfg.get("trim",{}); paper=cfg.get("paper",{}); bleed=float(cfg.get("bleed_in",0.125))
     width=float(trim.get("width_in",6)); height=float(trim.get("height_in",9))
     ppi=float(paper.get("spine_in_per_page",0))
+    provider=cfg.get("provider","generic")
     if page_count < 1 or ppi <= 0:
         print("ERROR: page_count and spine_in_per_page must be positive"); return 1
     spine=page_count*ppi
     doc={"schema_version":1,"page_count":page_count,"trim_in":{"width":width,"height":height},
-         "bleed_in":bleed,"paper":{"id":paper.get("id"),"spine_in_per_page":ppi},
+         "bleed_in":bleed,"provider":provider,"paper":{"id":paper.get("id"),"spine_in_per_page":ppi},
          "spine_width_in":round(spine,6),
-         "cover_in":{"width":round(2*width+spine+2*bleed,6),"height":round(height+2*bleed,6)}}
+         "cover_in":{"width":round(2*width+spine+2*bleed,6),"height":round(height+2*bleed,6)},
+         "spine_text_allowed": (page_count > 79) if provider=="kdp" else None}
     out=Path(output); out.parent.mkdir(parents=True,exist_ok=True)
     out.write_text(json.dumps(doc,indent=2,sort_keys=True)+"\n",encoding="utf-8")
     print(out); return 0
