@@ -775,6 +775,23 @@ def store_metadata(metadata,channel,language,output):
     out.write_text(json.dumps(doc,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
     print(out); return 0
 
+def paperback_geometry(page_count, config, output):
+    cfg=load(config)
+    trim=cfg.get("trim",{}); paper=cfg.get("paper",{}); bleed=float(cfg.get("bleed_in",0.125))
+    width=float(trim.get("width_in",6)); height=float(trim.get("height_in",9))
+    ppi=float(paper.get("spine_in_per_page",0))
+    if page_count < 1 or ppi <= 0:
+        print("ERROR: page_count and spine_in_per_page must be positive"); return 1
+    spine=page_count*ppi
+    doc={"schema_version":1,"page_count":page_count,"trim_in":{"width":width,"height":height},
+         "bleed_in":bleed,"paper":{"id":paper.get("id"),"spine_in_per_page":ppi},
+         "spine_width_in":round(spine,6),
+         "cover_in":{"width":round(2*width+spine+2*bleed,6),"height":round(height+2*bleed,6)}}
+    out=Path(output); out.parent.mkdir(parents=True,exist_ok=True)
+    out.write_text(json.dumps(doc,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+    print(out); return 0
+
+
 def main():
     ap=argparse.ArgumentParser(prog="ploos-publish")
     sub=ap.add_subparsers(dest="cmd",required=True)
@@ -789,6 +806,7 @@ def main():
     pv=sub.add_parser("provenance-verify"); pv.add_argument("manifest")
     q=sub.add_parser("qualify"); q.add_argument("metadata"); q.add_argument("--epub",action="append",default=[]); q.add_argument("-o","--output",default="qualification-report.json")
     b=sub.add_parser("build"); b.add_argument("config"); b.add_argument("--target")
+    pg=sub.add_parser("paperback-geometry"); pg.add_argument("--pages",required=True,type=int); pg.add_argument("--config",required=True); pg.add_argument("-o","--output",default="paperback-geometry.json")
     cc=sub.add_parser("cover-check"); cc.add_argument("image"); cc.add_argument("config")
     cb=sub.add_parser("cover-build"); cb.add_argument("image"); cb.add_argument("config"); cb.add_argument("--output-dir",default="dist/covers")
     am=sub.add_parser("archive"); am.add_argument("metadata"); am.add_argument("artifacts",nargs="*"); am.add_argument("-o","--output",default="archive-manifest.json")
@@ -815,6 +833,7 @@ def main():
     if a.cmd=="provenance": return provenance(a.metadata,a.git_commit,a.qualification,a.artifact,a.output)
     if a.cmd=="provenance-verify": return provenance_verify(a.manifest)
     if a.cmd=="build": return build(a.config,a.target)
+    if a.cmd=="paperback-geometry": return paperback_geometry(a.pages,a.config,a.output)
     if a.cmd=="cover-check": return cover_check(a.image,a.config)
     if a.cmd=="cover-build": return cover_build(a.image,a.config,a.output_dir)
     if a.cmd=="archive": return archive_manifest(a.metadata,a.artifacts,a.output)
