@@ -1,0 +1,9 @@
+schema_version: 1
+trim:
+  width_in: 6
+  height_in: 9
+bleed_in: 0.125
+paper:
+  id: generic-white
+  # Explicit profile value; replace with provider-specific value at packaging time.
+  spine_in_per_page: 0.0025
