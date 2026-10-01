@@ -345,7 +345,7 @@ def package(metadata,config,channel,language,epub=None,pdf=None,cover=None):
         os.utime(dst,(0,0))
         copied.append({"kind":kind,"file":dst.name,"bytes":dst.stat().st_size,"sha256":sha256(dst)})
     meta={"project":data.get("project"),"language":language,"channel":channel,
-          "title":pub.get("title"),"author":pub.get("author"),"publisher":pub.get("publisher"),
+          "title":pub.get("title"),"subtitle":pub.get("subtitle"),"author":pub.get("author"),"publisher":pub.get("publisher"),
           "copyright_holder":pub.get("copyright_holder"),"license":pub.get("license"),
           "edition":data.get("edition"),"products":pub.get("products",{})}
     copied.sort(key=lambda x:(x["kind"],x["file"]))
@@ -626,6 +626,7 @@ def onix(metadata,language,product_name,output):
     title_detail=ET.SubElement(desc,"TitleDetail"); ET.SubElement(title_detail,"TitleType").text="01"
     title_el=ET.SubElement(title_detail,"TitleElement"); ET.SubElement(title_el,"TitleElementLevel").text="01"
     ET.SubElement(title_el,"TitleText").text=pub.get("title")
+    if pub.get("subtitle"): ET.SubElement(title_el,"Subtitle").text=pub.get("subtitle")
     contributor=ET.SubElement(desc,"Contributor"); ET.SubElement(contributor,"SequenceNumber").text="1"
     ET.SubElement(contributor,"ContributorRole").text="A01"; ET.SubElement(contributor,"PersonName").text=pub.get("author")
     lang=ET.SubElement(desc,"Language"); ET.SubElement(lang,"LanguageRole").text="01"
@@ -656,7 +657,7 @@ def catalog(metadata_files,output,include_unpublished=False):
             for name,product in pub.get("products",{}).items():
                 products[name]={"isbn":product.get("isbn")}
             books.append({"project":data.get("project"),"work_id":data.get("work",{}).get("id"),
-                          "language":language,"title":pub.get("title"),"author":pub.get("author"),
+                          "language":language,"title":pub.get("title"),"subtitle":pub.get("subtitle"),"author":pub.get("author"),
                           "publisher":pub.get("publisher"),"edition":data.get("edition"),
                           "lifecycle":state,"products":products})
     books.sort(key=lambda x:(x["title"].casefold(),x["language"]))
@@ -742,7 +743,7 @@ def accessibility_report(metadata,epub,language,output):
     ]
     status="FAIL" if errors else ("WARN" if warnings else "PASS")
     doc={"schema_version":1,"project":data.get("project"),"work_id":data.get("work",{}).get("id"),
-         "language":language,"title":pub.get("title"),"edition":data.get("edition"),
+         "language":language,"title":pub.get("title"),"subtitle":pub.get("subtitle"),"edition":data.get("edition"),
          "artifact":{"path":str(epub),"sha256":sha256(epub) if Path(epub).is_file() else None},
          "status":status,"summary":{"errors":len(errors),"warnings":len(warnings)},"checks":checks,
          "scope":"Automated internal EPUB accessibility checks; not a complete WCAG/EPUB Accessibility conformance certification."}
