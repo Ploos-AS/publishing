@@ -794,6 +794,54 @@ def paperback_geometry(page_count, config, output):
     print(out); return 0
 
 
+def paperback_cover(metadata, language, pages, config, output):
+    meta=load(metadata); pub=meta.get("publications",{}).get(language,{})
+    if not pub:
+        print("ERROR: language publication not found:",language); return 1
+    cfg=load(config); paper=cfg.get("paper",{}); ppi=float(paper.get("spine_in_per_page",0))
+    if ppi <= 0:
+        print("ERROR: paperback cover requires a calculable spine profile"); return 1
+    trim=cfg.get("trim",{}); tw=float(trim.get("width_in",6)); th=float(trim.get("height_in",9))
+    bleed=float(cfg.get("bleed_in",0.125)); spine=pages*ppi
+    width=2*tw+spine+2*bleed; height=th+2*bleed
+    title=html.escape(str(pub.get("title",""))); subtitle=html.escape(str(pub.get("subtitle","") or ""))
+    author=html.escape(str(pub.get("author",AUTHOR))); publisher=html.escape(str(pub.get("publisher",PUBLISHER)))
+    out=Path(output); out.parent.mkdir(parents=True,exist_ok=True)
+    svg=out.with_suffix(".svg")
+    def x(v): return f"{v:.6f}in"
+    front_x=bleed+tw+spine
+    spine_x=bleed+tw
+    safe=0.25
+    spine_text = pages > 79 if cfg.get("provider")=="kdp" else True
+    parts=[
+      f'<svg xmlns="http://www.w3.org/2000/svg" width="{x(width)}" height="{x(height)}" viewBox="0 0 {width*72:.3f} {height*72:.3f}">',
+      '<rect width="100%" height="100%" fill="white"/>',
+      f'<rect x="{front_x*72:.3f}" y="{bleed*72:.3f}" width="{tw*72:.3f}" height="{th*72:.3f}" fill="none" stroke="black" stroke-width="0.5"/>',
+      f'<rect x="{bleed*72:.3f}" y="{bleed*72:.3f}" width="{tw*72:.3f}" height="{th*72:.3f}" fill="none" stroke="black" stroke-width="0.5"/>',
+      f'<text x="{(front_x+tw/2)*72:.3f}" y="{(bleed+th*0.36)*72:.3f}" text-anchor="middle" font-family="sans-serif" font-size="28" font-weight="bold">{title}</text>',
+      f'<text x="{(front_x+tw/2)*72:.3f}" y="{(bleed+th*0.43)*72:.3f}" text-anchor="middle" font-family="sans-serif" font-size="12">{subtitle}</text>',
+      f'<text x="{(front_x+tw/2)*72:.3f}" y="{(bleed+th*0.82)*72:.3f}" text-anchor="middle" font-family="sans-serif" font-size="14">{author}</text>',
+      f'<text x="{(bleed+safe)*72:.3f}" y="{(bleed+safe+0.15)*72:.3f}" font-family="sans-serif" font-size="10">{publisher}</text>',
+      f'<rect x="{(bleed+tw-2.25)*72:.3f}" y="{(bleed+th-1.45)*72:.3f}" width="{2*72:.3f}" height="{1.2*72:.3f}" fill="none" stroke="black" stroke-dasharray="4 3"/>',
+      f'<text x="{(bleed+tw-1.25)*72:.3f}" y="{(bleed+th-0.82)*72:.3f}" text-anchor="middle" font-family="sans-serif" font-size="8">BARCODE / ISBN AREA</text>'
+    ]
+    if spine_text:
+        cx=(spine_x+spine/2)*72; cy=(bleed+th/2)*72
+        parts.append(f'<text x="{cx:.3f}" y="{cy:.3f}" text-anchor="middle" font-family="sans-serif" font-size="10" transform="rotate(90 {cx:.3f} {cy:.3f})">{title} — {author}</text>')
+    parts.append('</svg>')
+    svg.write_text("\n".join(parts)+"\n",encoding="utf-8")
+    if out.suffix.lower()==".pdf":
+        tool=shutil.which("rsvg-convert")
+        if not tool:
+            print(svg); print("ERROR: rsvg-convert required for PDF output"); return 1
+        subprocess.run([tool,"-f","pdf","-o",str(out),str(svg)],check=True)
+        print(out)
+    else:
+        if out != svg: shutil.copyfile(svg,out)
+        print(svg)
+    return 0
+
+
 def main():
     ap=argparse.ArgumentParser(prog="ploos-publish")
     sub=ap.add_subparsers(dest="cmd",required=True)
@@ -808,6 +856,7 @@ def main():
     pv=sub.add_parser("provenance-verify"); pv.add_argument("manifest")
     q=sub.add_parser("qualify"); q.add_argument("metadata"); q.add_argument("--epub",action="append",default=[]); q.add_argument("-o","--output",default="qualification-report.json")
     b=sub.add_parser("build"); b.add_argument("config"); b.add_argument("--target")
+    pc=sub.add_parser("paperback-cover"); pc.add_argument("metadata"); pc.add_argument("--language",required=True); pc.add_argument("--pages",required=True,type=int); pc.add_argument("--config",required=True); pc.add_argument("-o","--output",required=True)
     pg=sub.add_parser("paperback-geometry"); pg.add_argument("--pages",required=True,type=int); pg.add_argument("--config",required=True); pg.add_argument("-o","--output",default="paperback-geometry.json")
     cc=sub.add_parser("cover-check"); cc.add_argument("image"); cc.add_argument("config")
     cb=sub.add_parser("cover-build"); cb.add_argument("image"); cb.add_argument("config"); cb.add_argument("--output-dir",default="dist/covers")
@@ -835,6 +884,7 @@ def main():
     if a.cmd=="provenance": return provenance(a.metadata,a.git_commit,a.qualification,a.artifact,a.output)
     if a.cmd=="provenance-verify": return provenance_verify(a.manifest)
     if a.cmd=="build": return build(a.config,a.target)
+    if a.cmd=="paperback-cover": return paperback_cover(a.metadata,a.language,a.pages,a.config,a.output)
     if a.cmd=="paperback-geometry": return paperback_geometry(a.pages,a.config,a.output)
     if a.cmd=="cover-check": return cover_check(a.image,a.config)
     if a.cmd=="cover-build": return cover_build(a.image,a.config,a.output_dir)
