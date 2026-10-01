@@ -19,6 +19,13 @@ publications:
       nb: Tallsystemer
       en: Number Systems
     status: planned
+    planned_isbn_roles:
+      - {language: nb, format: epub}
+      - {language: nb, format: pdf}
+      - {language: nb, format: paperback}
+      - {language: en, format: epub}
+      - {language: en, format: pdf}
+      - {language: en, format: paperback}
 
   - project: EduBoolean
     titles:
