@@ -20,6 +20,14 @@ publications:
         isbn: PENDING
       pdf:
         isbn: PENDING
+      paperback:
+        isbn: PENDING
+        production: POD
+      kindle:
+        isbn: null
+        external_id_type: ASIN
+        external_id: null
+        source: epub
       web:
         isbn: null
   en:
@@ -33,6 +41,14 @@ publications:
         isbn: PENDING
       pdf:
         isbn: PENDING
+      paperback:
+        isbn: PENDING
+        production: POD
+      kindle:
+        isbn: null
+        external_id_type: ASIN
+        external_id: null
+        source: epub
       web:
         isbn: null
 distribution:
