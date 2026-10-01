@@ -1,0 +1,13 @@
+schema_version: 1
+provider: ingramspark
+mode: template-required
+trim:
+  width_in: 6
+  height_in: 9
+bleed_in: 0.125
+cover:
+  resolution_ppi: 300
+  color_space: CMYK
+  format: PDF
+notes:
+  - Use the exact Lightning Source/IngramSpark cover template generated for ISBN, trim, binding, paper and page count.
