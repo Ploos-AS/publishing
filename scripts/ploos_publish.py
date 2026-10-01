@@ -137,7 +137,7 @@ def isbn_metadata_check(registry,metadata):
                 if value=="PENDING": errors.append(f"{language}/{product}: registry has allocated ISBN {allocated} but metadata is PENDING")
                 elif not isbn13_valid(value) or normalize_isbn(value)!=allocated:
                     errors.append(f"{language}/{product}: metadata ISBN does not match registry allocation")
-            elif value!="PENDING":
+            elif value not in (None, "PENDING"):
                 errors.append(f"{language}/{product}: metadata has ISBN but registry has no allocation")
     for e in errors: print("ERROR:",e)
     if errors: return 1
