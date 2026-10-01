@@ -11,6 +11,7 @@ lifecycle:
 publications:
   nb:
     title: Tallsystemer
+    subtitle: "Fra binært til heksadesimalt – forstå hvordan datamaskiner representerer tall"
     author: Per Gustav Ousdal
     publisher: Ploos AS
     copyright_holder: Ploos AS
@@ -32,6 +33,7 @@ publications:
         isbn: null
   en:
     title: Number Systems
+    subtitle: "From Binary to Hexadecimal – Understanding How Computers Represent Numbers"
     author: Per Gustav Ousdal
     publisher: Ploos AS
     copyright_holder: Ploos AS
