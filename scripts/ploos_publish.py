@@ -854,8 +854,8 @@ def paperback_cover_check(pdf, pages, config):
     if info.returncode!=0:
         print("ERROR: pdfinfo failed"); return 1
     import re
-    pm=re.search(r"^Pages:\\s*(\\d+)\\s*$",info.stdout,re.MULTILINE|re.IGNORECASE)
-    sm=re.search(r"^Page\\s+size:\\s*([0-9.]+)\\s*x\\s*([0-9.]+)\\s*pts(?:\\s.*)?$",info.stdout,re.MULTILINE|re.IGNORECASE)
+    pm=re.search(r"^Pages:\s*(\d+)\s*$",info.stdout,re.MULTILINE|re.IGNORECASE)
+    sm=re.search(r"^Page\s+size:\s*([0-9.]+)\s*x\s*([0-9.]+)\s*pts(?:\s.*)?$",info.stdout,re.MULTILINE|re.IGNORECASE)
     if not pm or int(pm.group(1))!=1: errors.append("cover PDF must contain exactly one page")
     cfg=load(config); trim=cfg.get("trim",{}); paper=cfg.get("paper",{})
     tw=float(trim.get("width_in",6)); th=float(trim.get("height_in",9)); bleed=float(cfg.get("bleed_in",0.125)); ppi=float(paper.get("spine_in_per_page",0))
