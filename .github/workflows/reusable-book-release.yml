@@ -20,6 +20,12 @@ on:
       pdf:
         type: string
         default: ""
+      print_pdf:
+        type: string
+        default: ""
+      cover_pdf:
+        type: string
+        default: ""
       artifact_name:
         type: string
         default: publishing-release
@@ -62,6 +68,8 @@ jobs:
         run: |
           args=(provenance "${{ inputs.metadata }}" --git-commit "${GITHUB_SHA}" --qualification qualification-report.json --artifact "${{ inputs.epub }}" -o provenance.json)
           if [[ -n "${{ inputs.pdf }}" ]]; then args+=(--artifact "${{ inputs.pdf }}"); fi
+          if [[ -n "${{ inputs.print_pdf }}" ]]; then args+=(--artifact "${{ inputs.print_pdf }}"); fi
+          if [[ -n "${{ inputs.cover_pdf }}" ]]; then args+=(--artifact "${{ inputs.cover_pdf }}"); fi
           python .ploos-publishing/scripts/ploos_publish.py "${args[@]}"
       - name: Verify provenance
         run: python .ploos-publishing/scripts/ploos_publish.py provenance-verify provenance.json
@@ -74,5 +82,7 @@ jobs:
             ${{ inputs.metadata }}
             ${{ inputs.epub }}
             ${{ inputs.pdf }}
+            ${{ inputs.print_pdf }}
+            ${{ inputs.cover_pdf }}
             qualification-report.json
             provenance.json
