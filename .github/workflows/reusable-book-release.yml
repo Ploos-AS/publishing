@@ -48,7 +48,7 @@ jobs:
         if: inputs.build_config != ''
         run: |
           sudo apt-get update
-          sudo apt-get install -y pandoc texlive-xetex calibre poppler-utils epubcheck librsvg2-bin
+          sudo apt-get install -y --no-install-recommends pandoc texlive-xetex lmodern texlive-fonts-recommended poppler-utils epubcheck librsvg2-bin
       - name: Build publication
         if: inputs.build_config != ''
         run: python .ploos-publishing/scripts/ploos_publish.py build "${{ inputs.build_config }}"
@@ -57,8 +57,6 @@ jobs:
         run: python .ploos-publishing/scripts/ploos_publish.py isbn-metadata-check "${{ inputs.isbn_registry }}" "${{ inputs.metadata }}"
       - name: Validate metadata
         run: python .ploos-publishing/scripts/ploos_publish.py validate "${{ inputs.metadata }}"
-      - name: Install EPUBCheck
-        run: sudo apt-get update && sudo apt-get install -y epubcheck
       - name: EPUBCheck
         run: python .ploos-publishing/scripts/ploos_publish.py epubcheck "${{ inputs.epub }}"
       - name: Qualify
