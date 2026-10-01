@@ -842,6 +842,41 @@ def paperback_cover(metadata, language, pages, config, output):
     return 0
 
 
+def paperback_cover_check(pdf, pages, config):
+    path=Path(pdf); errors=[]
+    if not path.is_file():
+        print("ERROR: paperback cover not found:",path); return 1
+    pdfinfo=shutil.which("pdfinfo")
+    pdffonts=shutil.which("pdffonts")
+    if not pdfinfo or not pdffonts:
+        print("ERROR: pdfinfo and pdffonts are required for paperback cover QA"); return 2
+    info=subprocess.run([pdfinfo,str(path)],capture_output=True,text=True,check=False)
+    if info.returncode!=0:
+        print("ERROR: pdfinfo failed"); return 1
+    import re
+    pm=re.search(r"^Pages:\\s*(\\d+)\\s*$",info.stdout,re.MULTILINE|re.IGNORECASE)
+    sm=re.search(r"^Page\\s+size:\\s*([0-9.]+)\\s*x\\s*([0-9.]+)\\s*pts(?:\\s.*)?$",info.stdout,re.MULTILINE|re.IGNORECASE)
+    if not pm or int(pm.group(1))!=1: errors.append("cover PDF must contain exactly one page")
+    cfg=load(config); trim=cfg.get("trim",{}); paper=cfg.get("paper",{})
+    tw=float(trim.get("width_in",6)); th=float(trim.get("height_in",9)); bleed=float(cfg.get("bleed_in",0.125)); ppi=float(paper.get("spine_in_per_page",0))
+    if pages < 1 or ppi <= 0: errors.append("page count and spine profile must be positive")
+    if sm and ppi > 0:
+        actual_w=float(sm.group(1)); actual_h=float(sm.group(2))
+        expected_w=(2*tw+pages*ppi+2*bleed)*72; expected_h=(th+2*bleed)*72
+        if abs(actual_w-expected_w)>1.0 or abs(actual_h-expected_h)>1.0:
+            errors.append(f"cover size {actual_w:.3f} x {actual_h:.3f} pt; expected {expected_w:.3f} x {expected_h:.3f} pt")
+    elif not sm: errors.append("could not read cover page size")
+    fonts=subprocess.run([pdffonts,str(path)],capture_output=True,text=True,check=False)
+    if fonts.returncode!=0: errors.append("pdffonts failed")
+    else:
+        rows=[line.split() for line in fonts.stdout.splitlines()[2:] if line.strip()]
+        if not rows: errors.append("cover PDF contains no fonts")
+        elif any(len(row)<5 or row[4].lower()!="yes" for row in rows): errors.append("cover PDF contains a non-embedded font")
+    for error in errors: print("ERROR:",error)
+    if errors: return 1
+    print("Paperback cover QA PASS"); return 0
+
+
 def main():
     ap=argparse.ArgumentParser(prog="ploos-publish")
     sub=ap.add_subparsers(dest="cmd",required=True)
@@ -857,7 +892,7 @@ def main():
     q=sub.add_parser("qualify"); q.add_argument("metadata"); q.add_argument("--epub",action="append",default=[]); q.add_argument("-o","--output",default="qualification-report.json")
     b=sub.add_parser("build"); b.add_argument("config"); b.add_argument("--target")
     pc=sub.add_parser("paperback-cover"); pc.add_argument("metadata"); pc.add_argument("--language",required=True); pc.add_argument("--pages",required=True,type=int); pc.add_argument("--config",required=True); pc.add_argument("-o","--output",required=True)
-    pg=sub.add_parser("paperback-geometry"); pg.add_argument("--pages",required=True,type=int); pg.add_argument("--config",required=True); pg.add_argument("-o","--output",default="paperback-geometry.json")
+    pg=sub.add_parser("paperback-geometry"); pg.add_argument("--pages",required=True,type=int); pg.add_argument("--config",required=True); pg.add_argument("-o","--output",default="paperback-geometry.json")\n    pq=sub.add_parser("paperback-cover-check"); pq.add_argument("pdf"); pq.add_argument("--pages",required=True,type=int); pq.add_argument("--config",required=True)
     cc=sub.add_parser("cover-check"); cc.add_argument("image"); cc.add_argument("config")
     cb=sub.add_parser("cover-build"); cb.add_argument("image"); cb.add_argument("config"); cb.add_argument("--output-dir",default="dist/covers")
     am=sub.add_parser("archive"); am.add_argument("metadata"); am.add_argument("artifacts",nargs="*"); am.add_argument("-o","--output",default="archive-manifest.json")
@@ -885,7 +920,7 @@ def main():
     if a.cmd=="provenance-verify": return provenance_verify(a.manifest)
     if a.cmd=="build": return build(a.config,a.target)
     if a.cmd=="paperback-cover": return paperback_cover(a.metadata,a.language,a.pages,a.config,a.output)
-    if a.cmd=="paperback-geometry": return paperback_geometry(a.pages,a.config,a.output)
+    if a.cmd=="paperback-geometry": return paperback_geometry(a.pages,a.config,a.output)\n    if a.cmd=="paperback-cover-check": return paperback_cover_check(a.pdf,a.pages,a.config)
     if a.cmd=="cover-check": return cover_check(a.image,a.config)
     if a.cmd=="cover-build": return cover_build(a.image,a.config,a.output_dir)
     if a.cmd=="archive": return archive_manifest(a.metadata,a.artifacts,a.output)
