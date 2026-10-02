@@ -29,6 +29,14 @@ def main():
     assert run("validate",META).returncode==0
     assert run("isbn-validate",ISBN_REGISTRY).returncode==0
     assert run("isbn-metadata-check",ISBN_REGISTRY,META).returncode==0
+    with tempfile.TemporaryDirectory() as barcode_td:
+        barcode=Path(barcode_td)/"isbn.svg"
+        assert run("isbn-barcode","978-82-94310-00-5","-o",barcode).returncode==0
+        svg=barcode.read_text()
+        assert '<svg xmlns="http://www.w3.org/2000/svg"' in svg
+        assert "9788294310005" in svg
+        assert svg.count("<rect ") == 1 + 49
+        assert run("isbn-barcode","978-82-94310-00-6","-o",Path(barcode_td)/"bad.svg").returncode!=0
     with tempfile.TemporaryDirectory() as isbn_td:
         isbn_td=Path(isbn_td)
         valid=yaml.safe_load(ISBN_REGISTRY.read_text())
