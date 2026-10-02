@@ -2,7 +2,7 @@
 """Ploos Publishing CLI."""
 from __future__ import annotations
 import argparse, hashlib, html, json, os, shutil, subprocess, zipfile
-from datetime import date
+from datetime import date, datetime, timezone
 from xml.etree import ElementTree as ET
 from pathlib import Path
 from urllib.parse import urlparse
