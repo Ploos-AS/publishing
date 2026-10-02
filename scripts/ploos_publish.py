@@ -849,9 +849,27 @@ def paperback_cover(metadata, language, pages, config, output):
       f'<text x="{(front_x+tw/2)*72:.3f}" y="{(bleed+th*0.43)*72:.3f}" text-anchor="middle" font-family="sans-serif" font-size="12">{subtitle}</text>',
       f'<text x="{(front_x+tw/2)*72:.3f}" y="{(bleed+th*0.82)*72:.3f}" text-anchor="middle" font-family="sans-serif" font-size="14">{author}</text>',
       f'<text x="{(bleed+safe)*72:.3f}" y="{(bleed+safe+0.15)*72:.3f}" font-family="sans-serif" font-size="10">{publisher}</text>',
-      f'<rect x="{(bleed+tw-2.25)*72:.3f}" y="{(bleed+th-1.45)*72:.3f}" width="{2*72:.3f}" height="{1.2*72:.3f}" fill="none" stroke="black" stroke-dasharray="4 3"/>',
-      f'<text x="{(bleed+tw-1.25)*72:.3f}" y="{(bleed+th-0.82)*72:.3f}" text-anchor="middle" font-family="sans-serif" font-size="8">BARCODE / ISBN AREA</text>'
     ]
+    paperback=pub.get("products",{}).get("paperback",{})
+    isbn=paperback.get("isbn")
+    if isbn and isbn!="PENDING" and isbn13_valid(isbn):
+        # Render EAN-13 directly into the back-cover barcode area.
+        s=normalize_isbn(isbn)
+        l={"0":"0001101","1":"0011001","2":"0010011","3":"0111101","4":"0100011","5":"0110001","6":"0101111","7":"0111011","8":"0110111","9":"0001011"}
+        g={"0":"0100111","1":"0110011","2":"0011011","3":"0100001","4":"0011101","5":"0111001","6":"0000101","7":"0010001","8":"0001001","9":"0010111"}
+        rr={"0":"1110010","1":"1100110","2":"1101100","3":"1000010","4":"1011100","5":"1001110","6":"1010000","7":"1000100","8":"1001000","9":"1110100"}
+        parity=("LLLLLL","LLGLGG","LLGGLG","LLGGGL","LGLLGG","LGGLLG","LGGGLL","LGLGLG","LGLGGL","LGGLGL")
+        bits="101"+"".join(l[d] if p=="L" else g[d] for d,p in zip(s[1:7],parity[int(s[0])]))+"01010"+"".join(rr[d] for d in s[7:])+"101"
+        bx=(bleed+tw-2.05)*72; by=(bleed+th-1.25)*72; mw=(1.6*72)/95; bh=0.78*72
+        parts.append(f'<rect x="{bx-8:.3f}" y="{by-5:.3f}" width="{1.6*72+16:.3f}" height="{1.05*72:.3f}" fill="white"/>')
+        for i,b in enumerate(bits):
+            if b=="1": parts.append(f'<rect x="{bx+i*mw:.3f}" y="{by:.3f}" width="{mw:.3f}" height="{bh:.3f}" fill="black"/>')
+        parts.append(f'<text x="{bx+0.8*72:.3f}" y="{by+0.94*72:.3f}" text-anchor="middle" font-family="sans-serif" font-size="8">{s}</text>')
+    else:
+        parts.extend([
+          f'<rect x="{(bleed+tw-2.25)*72:.3f}" y="{(bleed+th-1.45)*72:.3f}" width="{2*72:.3f}" height="{1.2*72:.3f}" fill="none" stroke="black" stroke-dasharray="4 3"/>',
+          f'<text x="{(bleed+tw-1.25)*72:.3f}" y="{(bleed+th-0.82)*72:.3f}" text-anchor="middle" font-family="sans-serif" font-size="8">BARCODE / ISBN AREA</text>'
+        ])
     if spine_text:
         cx=(spine_x+spine/2)*72; cy=(bleed+th/2)*72
         parts.append(f'<text x="{cx:.3f}" y="{cy:.3f}" text-anchor="middle" font-family="sans-serif" font-size="10" transform="rotate(90 {cx:.3f} {cy:.3f})">{title} — {author}</text>')
