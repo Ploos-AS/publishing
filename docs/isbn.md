@@ -14,11 +14,11 @@ The canonical allocation identity is:
 project + edition + language + product
 ```
 
-For example, Norwegian EPUB and PDF editions are separate products, and a second edition is distinct from the first edition.
+For example, Norwegian EPUB, Kindle and PDF editions are separate products, and a second edition is distinct from the first edition.
 
 ## Publisher-prefix state
 
-The registry starts in the conservative state:
+The initial registry state was:
 
 ```yaml
 prefix_status: pending
@@ -26,7 +26,9 @@ publisher_prefix: null
 isbn_pool: []
 ```
 
-The production sequence is deliberately one-way operationally:
+Ploos AS has now completed the prefix assignment and official pool import. The canonical registry records publisher prefix `978-82-94310`; the 100-number official pool is the only source for production allocation.
+
+The allocation sequence is:
 
 ```text
 pending
@@ -64,4 +66,4 @@ python scripts/ploos_publish.py isbn-allocate isbn/registry.yaml \
   --project EduNumbers --edition 1 --language nb --product epub --write
 ```
 
-Production ISBNs must come from the official Ploos AS allocation. Do not use realistic placeholders.
+Production ISBNs must come from the official Ploos AS allocation. Do not use realistic placeholders. The primary digital product set is EPUB, Kindle and PDF; store identifiers such as Amazon ASIN remain separate distribution metadata.
