@@ -33,7 +33,8 @@ jobs:
           echo "$EPUBCHECK_SHA256  /tmp/epubcheck.zip" | sha256sum --check -
           unzip -q /tmp/epubcheck.zip -d "$HOME/.local/share"
           mkdir -p "$HOME/.local/bin"
-          ln -s "$HOME/.local/share/epubcheck-$EPUBCHECK_VERSION/bin/epubcheck" "$HOME/.local/bin/epubcheck"
+          printf '%s\n' '#!/bin/sh' 'exec java -jar "$HOME/.local/share/epubcheck-5.4.0/epubcheck.jar" "$@"' > "$HOME/.local/bin/epubcheck"
+          chmod +x "$HOME/.local/bin/epubcheck"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           "$HOME/.local/bin/epubcheck" --version
       - name: EPUBCheck smoke test
