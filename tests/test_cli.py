@@ -81,6 +81,7 @@ def main():
         assert run("isbn-allocate",registry,"--project","EduNumbers","--edition","1","--language","nb","--product","epub","--write").returncode!=0
         assert run("isbn-allocate",registry,"--project","EduNumbers","--edition","2","--language","nb","--product","epub","--write").returncode==0
         assert run("isbn-allocate",registry,"--project","EduNumbers","--edition","1","--language","en","--product","epub","--write").returncode==0
+        assert run("isbn-allocate",registry,"--project","EduNumbers","--edition","1","--language","nb","--product","kindle","--write").returncode==0
         assert yaml.safe_load(registry.read_text())["allocations"][1]["isbn"]=="9780000000019"
         assert run("isbn-allocate",registry,"--project","EduNumbers","--edition","1","--language","nb","--product","pdf","--write").returncode!=0
         assert run("isbn-allocate",registry,"--project","Unknown","--edition","1","--language","nb","--product","epub").returncode!=0
