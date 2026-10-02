@@ -66,14 +66,14 @@ def main():
         registry_data["isbn_pool"]=[]
         registry_data["allocations"]=[]
         registry.write_text(yaml.safe_dump(registry_data,sort_keys=False,allow_unicode=True))
-        pool=isbn_td/"pool.txt"; pool.write_text("9780000000002\n9780000000019\n9780000000026\n")
+        pool=isbn_td/"pool.txt"; pool.write_text("9780000000002\n9780000000019\n9780000000026\n9780000000033\n")
         pending_data=copy.deepcopy(registry_data); pending_data["publisher"]["prefix_status"]="pending"; pending_data["publisher"]["publisher_prefix"]=None; pending_data["isbn_pool"]=[]
         pending_registry=isbn_td/"pending-registry.yaml"; pending_registry.write_text(yaml.safe_dump(pending_data,sort_keys=False,allow_unicode=True))
         assert run("isbn-import",pending_registry,pool,"--write").returncode!=0
         assert yaml.safe_load(pending_registry.read_text())["isbn_pool"]==[]
         assert run("isbn-import",registry,pool,"--write").returncode==0
         imported=yaml.safe_load(registry.read_text())
-        assert imported["isbn_pool"]==["9780000000002","9780000000019","9780000000026"]
+        assert imported["isbn_pool"]==["9780000000002","9780000000019","9780000000026","9780000000033"]
         assert imported["publisher"]["prefix_status"]=="assigned"
         assert run("isbn-allocate",registry,"--project","EduNumbers","--edition","1","--language","nb","--product","epub","--write").returncode==0
         allocated=yaml.safe_load(registry.read_text())
@@ -82,7 +82,7 @@ def main():
         assert run("isbn-allocate",registry,"--project","EduNumbers","--edition","2","--language","nb","--product","epub","--write").returncode==0
         assert run("isbn-allocate",registry,"--project","EduNumbers","--edition","1","--language","en","--product","epub","--write").returncode==0
         assert run("isbn-allocate",registry,"--project","EduNumbers","--edition","1","--language","nb","--product","kindle","--write").returncode==0
-        assert yaml.safe_load(registry.read_text())["allocations"][1]["isbn"]=="9780000000019"
+        assert yaml.safe_load(registry.read_text())["allocations"][3]["isbn"]=="9780000000033"
         assert run("isbn-allocate",registry,"--project","EduNumbers","--edition","1","--language","nb","--product","pdf","--write").returncode!=0
         assert run("isbn-allocate",registry,"--project","Unknown","--edition","1","--language","nb","--product","epub").returncode!=0
         assert run("isbn-allocate",registry,"--project","EduNumbers","--edition","0","--language","nb","--product","epub").returncode!=0
