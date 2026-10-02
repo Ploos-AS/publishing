@@ -94,10 +94,13 @@ def main():
         synced["publications"]["nb"]["products"]["epub"]["isbn"]="9780000000002"
         synced_meta.write_text(yaml.safe_dump(synced,sort_keys=False,allow_unicode=True))
         assert run("isbn-metadata-check",registry,synced_meta).returncode==0
-        isbn_free=copy.deepcopy(synced)
-        isbn_free["publications"]["nb"]["products"]["kindle"]={"isbn":None,"external_id_type":"ASIN","external_id":None,"source":"epub"}
-        isbn_free_meta=isbn_td/"isbn-free-metadata.yaml"; isbn_free_meta.write_text(yaml.safe_dump(isbn_free,sort_keys=False,allow_unicode=True))
-        assert run("isbn-metadata-check",registry,isbn_free_meta).returncode==0
+        kindle_synced=copy.deepcopy(synced)
+        kindle_synced["publications"]["nb"]["products"]["kindle"]={"isbn":"9780000000033","external_id_type":"ASIN","external_id":None,"source":"epub"}
+        kindle_synced_meta=isbn_td/"kindle-synced-metadata.yaml"; kindle_synced_meta.write_text(yaml.safe_dump(kindle_synced,sort_keys=False,allow_unicode=True))
+        assert run("isbn-metadata-check",registry,kindle_synced_meta).returncode==0
+        kindle_missing=copy.deepcopy(kindle_synced); kindle_missing["publications"]["nb"]["products"]["kindle"]["isbn"]=None
+        kindle_missing_meta=isbn_td/"kindle-missing-isbn.yaml"; kindle_missing_meta.write_text(yaml.safe_dump(kindle_missing,sort_keys=False,allow_unicode=True))
+        assert run("isbn-metadata-check",registry,kindle_missing_meta).returncode!=0
         mismatched=copy.deepcopy(synced); mismatched["publications"]["nb"]["products"]["epub"]["isbn"]="9780000000095"
         mismatch_meta=isbn_td/"mismatch-metadata.yaml"; mismatch_meta.write_text(yaml.safe_dump(mismatched,sort_keys=False,allow_unicode=True))
         assert run("isbn-metadata-check",registry,mismatch_meta).returncode!=0
