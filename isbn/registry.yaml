@@ -177,4 +177,10 @@ isbn_pool:
   - 978-82-94310-98-2
   - 978-82-94310-99-9
 
-allocations: []
+allocations:
+  - {isbn: 9788294310005, project: EduNumbers, edition: 1, language: nb, product: epub}
+  - {isbn: 9788294310012, project: EduNumbers, edition: 1, language: nb, product: pdf}
+  - {isbn: 9788294310029, project: EduNumbers, edition: 1, language: nb, product: kindle}
+  - {isbn: 9788294310036, project: EduNumbers, edition: 1, language: en, product: epub}
+  - {isbn: 9788294310043, project: EduNumbers, edition: 1, language: en, product: pdf}
+  - {isbn: 9788294310050, project: EduNumbers, edition: 1, language: en, product: kindle}
