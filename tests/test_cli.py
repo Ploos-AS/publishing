@@ -44,7 +44,7 @@ def main():
         paperback_data["publications"]["nb"]["products"]["paperback"]={"isbn":"978-82-94310-00-5"}
         paperback_meta.write_text(yaml.safe_dump(paperback_data,sort_keys=False,allow_unicode=True))
         paperback_cfg=cover_td/"paperback.yaml"
-        paperback_cfg.write_text("schema_version: 1\\ntrim:\\n  width_in: 6\\n  height_in: 9\\nbleed_in: 0.125\\npaper:\\n  id: test\\n  spine_in_per_page: 0.0025\\n")
+        paperback_cfg.write_text(yaml.safe_dump({"schema_version":1,"trim":{"width_in":6,"height_in":9},"bleed_in":0.125,"paper":{"id":"test","spine_in_per_page":0.0025}},sort_keys=False))
         cover_svg=cover_td/"cover.svg"
         assert run("paperback-cover",paperback_meta,"--language","nb","--pages","200","--config",paperback_cfg,"-o",cover_svg).returncode==0
         cover_text=cover_svg.read_text()
