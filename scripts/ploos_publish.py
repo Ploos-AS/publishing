@@ -882,7 +882,10 @@ def paperback_cover(metadata, language, pages, config, output):
         subprocess.run([tool,"-f","pdf","-o",str(out),str(svg)],check=True)
         print(out)
     else:
-        if out != svg: shutil.copyfile(svg,out)
+        # For SVG output, out and svg normally refer to the same path.
+        # Resolve paths before copying so relative/absolute spellings cannot
+        # trigger SameFileError.
+        if out.resolve() != svg.resolve(): shutil.copyfile(svg,out)
         print(svg)
     return 0
 
