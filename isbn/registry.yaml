@@ -3,8 +3,8 @@ publisher:
   name: Ploos AS
   country: NO
   isbn_agency: ISBN Norway / National Library of Norway
-  prefix_status: pending
-  publisher_prefix: null
+  prefix_status: assigned
+  publisher_prefix: 978-82-94310
 
 policy:
   placeholder: PENDING
