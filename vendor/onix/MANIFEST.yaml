@@ -1,0 +1,26 @@
+manifest_version: 1
+entry_point: ONIX_BookProduct_3.0_reference.xsd
+
+schema:
+  release: "3.0"
+  revision: 7
+  revised: "2020-05-18"
+
+codelists:
+  issue: 74
+
+sources:
+  authoritative:
+    authority: EDItEUR
+    location: https://www.editeur.org/93/Release-3.0-Downloads/
+    retrieved_at: "2026-10-02"
+
+files:
+  - path: ONIX_BookProduct_3.0_reference.xsd
+    sha256: 5ac4e162cbcc4a549c62fdfa3db47bd3ae0b13e3da26a9f92ec743debf10962d
+  - path: ONIX_BookProduct_CodeLists.xsd
+    sha256: ba948e26c1bf99ef2d633e17ca7c4767ec629571048feb2ea3ba6428745a3b58
+  - path: ONIX_XHTML_Subset.xsd
+    sha256: 5192454649d7b32a2b3dde20dcb63f6fc888b9b9e6227d56e981c283c73d1f1c
+  - path: ONIX_BookProduct_3.0_short.xsd
+    sha256: 8460dfa70d55675f4388d799b007eb37f4ba0a43d2faed28aea6c154eb4789e6
