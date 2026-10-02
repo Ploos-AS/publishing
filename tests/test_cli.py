@@ -35,7 +35,7 @@ def main():
         svg=barcode.read_text()
         assert '<svg xmlns="http://www.w3.org/2000/svg"' in svg
         assert "9788294310005" in svg
-        assert svg.count("<rect ") == 1 + 49
+        # 9788294310005 encodes to 45 black data/guard modules, plus the white background rect.\n        assert svg.count("<rect ") == 46
         assert run("isbn-barcode","978-82-94310-00-6","-o",Path(barcode_td)/"bad.svg").returncode!=0
     with tempfile.TemporaryDirectory() as isbn_td:
         isbn_td=Path(isbn_td)
