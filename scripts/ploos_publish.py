@@ -103,7 +103,7 @@ def isbn_allocate(registry,project,edition,language,product,write=False):
         print(f"ERROR: unknown project: {project}"); return 1
     if language not in publication.get("titles",{}):
         print(f"ERROR: unsupported language for {project}: {language}"); return 1
-    if product not in ("epub","pdf"):
+    if product not in ("epub","pdf","kindle"):
         print(f"ERROR: unsupported ISBN product: {product}"); return 1
     target=(project,edition,language,product)
     for a in data.get("allocations",[]):
