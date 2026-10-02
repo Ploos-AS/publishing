@@ -37,6 +37,25 @@ def main():
         assert "9788294310005" in svg
         # 9788294310005 encodes to 45 black data/guard modules, plus the white background rect.\n        assert svg.count("<rect ") == 46
         assert run("isbn-barcode","978-82-94310-00-6","-o",Path(barcode_td)/"bad.svg").returncode!=0
+    with tempfile.TemporaryDirectory() as cover_td:
+        cover_td=Path(cover_td)
+        paperback_meta=cover_td/"publication.yaml"
+        paperback_data=yaml.safe_load(META.read_text())
+        paperback_data["publications"]["nb"]["products"]["paperback"]={"isbn":"978-82-94310-00-5"}
+        paperback_meta.write_text(yaml.safe_dump(paperback_data,sort_keys=False,allow_unicode=True))
+        paperback_cfg=cover_td/"paperback.yaml"
+        paperback_cfg.write_text("schema_version: 1\\ntrim:\\n  width_in: 6\\n  height_in: 9\\nbleed_in: 0.125\\npaper:\\n  id: test\\n  spine_in_per_page: 0.0025\\n")
+        cover_svg=cover_td/"cover.svg"
+        assert run("paperback-cover",paperback_meta,"--language","nb","--pages","200","--config",paperback_cfg,"-o",cover_svg).returncode==0
+        cover_text=cover_svg.read_text()
+        assert "9788294310005" in cover_text
+        assert "BARCODE / ISBN AREA" not in cover_text
+        pending_data=copy.deepcopy(paperback_data)
+        pending_data["publications"]["nb"]["products"]["paperback"]["isbn"]="PENDING"
+        pending_meta=cover_td/"pending.yaml"; pending_meta.write_text(yaml.safe_dump(pending_data,sort_keys=False,allow_unicode=True))
+        pending_svg=cover_td/"pending.svg"
+        assert run("paperback-cover",pending_meta,"--language","nb","--pages","200","--config",paperback_cfg,"-o",pending_svg).returncode==0
+        assert "BARCODE / ISBN AREA" in pending_svg.read_text()
     with tempfile.TemporaryDirectory() as isbn_td:
         isbn_td=Path(isbn_td)
         valid=yaml.safe_load(ISBN_REGISTRY.read_text())
