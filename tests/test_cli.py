@@ -32,7 +32,7 @@ def main():
     with tempfile.TemporaryDirectory() as isbn_td:
         isbn_td=Path(isbn_td)
         valid=yaml.safe_load(ISBN_REGISTRY.read_text())
-        bad_prefix=copy.deepcopy(valid); bad_prefix["publisher"]["prefix_status"]="assigned"
+        bad_prefix=copy.deepcopy(valid); bad_prefix["publisher"]["prefix_status"]="pending"; bad_prefix["publisher"]["publisher_prefix"]="978-82-94310"; bad_prefix["isbn_pool"]=[]
         bad_prefix_path=isbn_td/"bad-prefix.yaml"; bad_prefix_path.write_text(yaml.safe_dump(bad_prefix,sort_keys=False,allow_unicode=True))
         assert run("isbn-validate",bad_prefix_path).returncode!=0
         assigned=copy.deepcopy(valid); assigned["publisher"]["prefix_status"]="assigned"; assigned["publisher"]["publisher_prefix"]="978-82-00000"
@@ -63,9 +63,12 @@ def main():
         registry_data=yaml.safe_load(ISBN_REGISTRY.read_text())
         registry_data["publisher"]["prefix_status"]="assigned"
         registry_data["publisher"]["publisher_prefix"]="978-82-00000"
+        registry_data["isbn_pool"]=[]
+        registry_data["allocations"]=[]
         registry.write_text(yaml.safe_dump(registry_data,sort_keys=False,allow_unicode=True))
         pool=isbn_td/"pool.txt"; pool.write_text("9780000000002\n9780000000019\n9780000000026\n")
-        pending_registry=isbn_td/"pending-registry.yaml"; pending_registry.write_text(ISBN_REGISTRY.read_text())
+        pending_data=copy.deepcopy(registry_data); pending_data["publisher"]["prefix_status"]="pending"; pending_data["publisher"]["publisher_prefix"]=None; pending_data["isbn_pool"]=[]
+        pending_registry=isbn_td/"pending-registry.yaml"; pending_registry.write_text(yaml.safe_dump(pending_data,sort_keys=False,allow_unicode=True))
         assert run("isbn-import",pending_registry,pool,"--write").returncode!=0
         assert yaml.safe_load(pending_registry.read_text())["isbn_pool"]==[]
         assert run("isbn-import",registry,pool,"--write").returncode==0
