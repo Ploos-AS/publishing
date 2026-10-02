@@ -31,8 +31,8 @@ jobs:
             "https://github.com/w3c/epubcheck/releases/download/v$EPUBCHECK_VERSION/epubcheck-$EPUBCHECK_VERSION.zip" \
             --output /tmp/epubcheck.zip
           echo "$EPUBCHECK_SHA256  /tmp/epubcheck.zip" | sha256sum --check -
+          mkdir -p "$HOME/.local/share" "$HOME/.local/bin"
           unzip -q /tmp/epubcheck.zip -d "$HOME/.local/share"
-          mkdir -p "$HOME/.local/bin"
           printf '%s\n' '#!/bin/sh' 'exec java -jar "$HOME/.local/share/epubcheck-5.4.0/epubcheck.jar" "$@"' > "$HOME/.local/bin/epubcheck"
           chmod +x "$HOME/.local/bin/epubcheck"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
