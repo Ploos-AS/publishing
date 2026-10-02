@@ -36,4 +36,19 @@ The earlier pilot at commit `839517114abd87eca24f62ab65bdab46d2775a61`, Actions 
 
 The current qualification supersedes these as production evidence because it combines canonical source metadata, immutable publishing tooling and the ISBN registry consistency gate.
 
-This qualification does not assign or imply production ISBNs. EduNumbers ISBN values remain `PENDING` until official Ploos AS ISBN allocation is available.
+The historical qualification above predates the official ISBN allocation and must not be read as current ISBN state. Ploos AS now has publisher prefix `978-82-94310`, and EduNumbers edition 1 has six canonical allocations: EPUB, Kindle and PDF for both Norwegian and English. A fresh production qualification against the current publishing revision remains required before M3 release.
+
+
+## ONIX Issue 74 qualification
+
+The authoritative EDItEUR ONIX 3.0 bundle is now pinned under `vendor/onix/` with Codelists Issue 74 and SHA-256 integrity records in `MANIFEST.yaml`.
+
+At publishing commit `9576921ba1c5b26f561cb33281fe7b391c45e43c`:
+
+- Validate publishing metadata — run `37042091407`: **PASS**
+- Publishing self-test — run `37042091378`: **PASS**
+- pinned bundle integrity verification: **PASS**
+- generated ONIX structural validation: **PASS**
+- EDItEUR Release 3.0 Revision 7 XSD validation: **PASS**
+
+This closes the authoritative ONIX-bundle gate. The remaining M3 production gate is to rerun EduNumbers NO and EN against the current qualified publishing revision and record the resulting artifacts.
