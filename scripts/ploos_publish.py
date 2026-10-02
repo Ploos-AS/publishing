@@ -641,6 +641,7 @@ def onix(metadata,language,product_name,output):
     root=ET.Element("ONIXMessage",{"release":"3.0","xmlns":"http://ns.editeur.org/onix/3.0/reference"})
     header=ET.SubElement(root,"Header")
     sender=ET.SubElement(header,"Sender"); ET.SubElement(sender,"SenderName").text=PUBLISHER
+    ET.SubElement(header,"SentDateTime").text=datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%z")
     product_el=ET.SubElement(root,"Product")
     ET.SubElement(product_el,"RecordReference").text=f"{data.get('work',{}).get('id',data.get('project'))}-{language}-{product_name}"
     ET.SubElement(product_el,"NotificationType").text="03"
@@ -656,10 +657,10 @@ def onix(metadata,language,product_name,output):
     if pub.get("subtitle"): ET.SubElement(title_el,"Subtitle").text=pub.get("subtitle")
     contributor=ET.SubElement(desc,"Contributor"); ET.SubElement(contributor,"SequenceNumber").text="1"
     ET.SubElement(contributor,"ContributorRole").text="A01"; ET.SubElement(contributor,"PersonName").text=pub.get("author")
-    lang=ET.SubElement(desc,"Language"); ET.SubElement(lang,"LanguageRole").text="01"
-    ET.SubElement(lang,"LanguageCode").text=ONIX_LANG.get(language,language)
     edition=data.get("edition",{})
     if edition.get("number"): ET.SubElement(desc,"EditionNumber").text=str(edition["number"])
+    lang=ET.SubElement(desc,"Language"); ET.SubElement(lang,"LanguageRole").text="01"
+    ET.SubElement(lang,"LanguageCode").text=ONIX_LANG.get(language,language)
     publishing=ET.SubElement(product_el,"PublishingDetail")
     publisher=ET.SubElement(publishing,"Publisher"); ET.SubElement(publisher,"PublishingRole").text="01"
     ET.SubElement(publisher,"PublisherName").text=pub.get("publisher")
