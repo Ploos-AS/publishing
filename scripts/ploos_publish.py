@@ -65,7 +65,7 @@ def isbn_registry_validate(path):
         else:
             if language not in publication.get("titles",{}): errors.append(f"allocation {i}: unsupported language for {project}: {language}")
         if not isinstance(edition,int) or edition < 1: errors.append(f"allocation {i}: edition must be a positive integer")
-        if product not in ("epub","pdf"): errors.append(f"allocation {i}: unsupported ISBN product: {product}")
+        if product not in ("epub","pdf","kindle"): errors.append(f"allocation {i}: unsupported ISBN product: {product}")
     for e in errors: print("ERROR:",e)
     if errors: return 1
     print(f"ISBN registry validation OK: {len(data.get('allocations',[]))} allocations, {len(pool)} pool entries"); return 0
