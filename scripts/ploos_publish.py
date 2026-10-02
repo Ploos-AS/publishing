@@ -26,6 +26,33 @@ def isbn13_valid(value):
     total=sum((1 if i%2==0 else 3)*int(d) for i,d in enumerate(s[:12]))
     return (10-(total%10))%10==int(s[12])
 
+def isbn_barcode(value, output):
+    """Write a deterministic EAN-13 barcode as dependency-free SVG."""
+    s=normalize_isbn(value)
+    if not isbn13_valid(s):
+        print(f"ERROR: invalid ISBN-13: {value}")
+        return 1
+    # EAN-13 encoding: guard bars + six left digits + center + six right digits.
+    l={"0":"0001101","1":"0011001","2":"0010011","3":"0111101","4":"0100011","5":"0110001","6":"0101111","7":"0111011","8":"0110111","9":"0001011"}
+    g={"0":"0100111","1":"0110011","2":"0011011","3":"0100001","4":"0011101","5":"0111001","6":"0000101","7":"0010001","8":"0001001","9":"0010111"}
+    rr={"0":"1110010","1":"1100110","2":"1101100","3":"1000010","4":"1011100","5":"1001110","6":"1010000","7":"1000100","8":"1001000","9":"1110100"}
+    parity=("LLLLLL","LLGLGG","LLGGLG","LLGGGL","LGLLGG","LGGLLG","LGGGLL","LGLGLG","LGLGGL","LGGLGL")
+    bits="101"
+    for d,p in zip(s[1:7],parity[int(s[0])]): bits += l[d] if p=="L" else g[d]
+    bits += "01010"
+    bits += "".join(rr[d] for d in s[7:])
+    bits += "101"
+    module=2; quiet=11; width=(len(bits)+2*quiet)*module; bar_h=100
+    rects=[]
+    for i,b in enumerate(bits):
+        if b=="1": rects.append(f'<rect x="{(quiet+i)*module}" y="0" width="{module}" height="{bar_h}"/>')
+    svg=(f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="125" viewBox="0 0 {width} 125">'
+         f'<rect width="100%" height="100%" fill="white"/><g fill="black">{"".join(rects)}</g>'
+         f'<text x="{width/2}" y="119" text-anchor="middle" font-family="sans-serif" font-size="14">{s}</text></svg>\n')
+    out=Path(output); out.parent.mkdir(parents=True,exist_ok=True); out.write_text(svg)
+    print(f"EAN-13 barcode: {out}")
+    return 0
+
 def isbn_registry_validate(path):
     data=load(path); errors=[]; seen={}; targets={}
     publisher=data.get("publisher",{})
@@ -881,7 +908,7 @@ def main():
     ap=argparse.ArgumentParser(prog="ploos-publish")
     sub=ap.add_subparsers(dest="cmd",required=True)
     v=sub.add_parser("validate"); v.add_argument("metadata")
-    iv=sub.add_parser("isbn-validate"); iv.add_argument("registry")
+    iv=sub.add_parser("isbn-validate"); iv.add_argument("registry")\n    ib=sub.add_parser("isbn-barcode"); ib.add_argument("isbn"); ib.add_argument("-o","--output",required=True)
     imc=sub.add_parser("isbn-metadata-check"); imc.add_argument("registry"); imc.add_argument("metadata")
     ii=sub.add_parser("isbn-import"); ii.add_argument("registry"); ii.add_argument("isbn_file"); ii.add_argument("--write",action="store_true")
     ia=sub.add_parser("isbn-allocate"); ia.add_argument("registry"); ia.add_argument("--project",required=True); ia.add_argument("--edition",required=True,type=int); ia.add_argument("--language",required=True); ia.add_argument("--product",required=True); ia.add_argument("--write",action="store_true")
@@ -911,7 +938,7 @@ def main():
     p=sub.add_parser("package"); p.add_argument("metadata"); p.add_argument("config"); p.add_argument("--channel",required=True,choices=["amazon","kobo","apple","google"]); p.add_argument("--language",required=True); p.add_argument("--epub"); p.add_argument("--pdf"); p.add_argument("--cover")
     a=ap.parse_args()
     if a.cmd=="validate": return validate(a.metadata)
-    if a.cmd=="isbn-validate": return isbn_registry_validate(a.registry)
+    if a.cmd=="isbn-validate": return isbn_registry_validate(a.registry)\n    if a.cmd=="isbn-barcode": return isbn_barcode(a.isbn,a.output)
     if a.cmd=="isbn-metadata-check": return isbn_metadata_check(a.registry,a.metadata)
     if a.cmd=="isbn-import": return isbn_import(a.registry,a.isbn_file,a.write)
     if a.cmd=="isbn-allocate": return isbn_allocate(a.registry,a.project,a.edition,a.language,a.product,a.write)
