@@ -22,12 +22,18 @@ jobs:
           java-version: "21"
       - name: Install pinned EPUBCheck
         timeout-minutes: 5
+        env:
+          EPUBCHECK_VERSION: "5.4.0"
+          EPUBCHECK_SHA256: "33350c61038e71dfb3d45a76aed04bf5481e6d5500cb780f6e98db8bbd15a28c"
         run: |
           set -euo pipefail
-          mvn -q dependency:copy -Dartifact=org.w3c:epubcheck:5.4.0 -DoutputDirectory="$HOME/.local/share/epubcheck"
+          curl --fail --location --retry 3 --connect-timeout 15 --max-time 240 \
+            "https://github.com/w3c/epubcheck/releases/download/v$EPUBCHECK_VERSION/epubcheck-$EPUBCHECK_VERSION.zip" \
+            --output /tmp/epubcheck.zip
+          echo "$EPUBCHECK_SHA256  /tmp/epubcheck.zip" | sha256sum --check -
+          unzip -q /tmp/epubcheck.zip -d "$HOME/.local/share"
           mkdir -p "$HOME/.local/bin"
-          printf '%s\n' '#!/bin/sh' 'exec java -jar "$HOME/.local/share/epubcheck/epubcheck-5.4.0.jar" "$@"' > "$HOME/.local/bin/epubcheck"
-          chmod +x "$HOME/.local/bin/epubcheck"
+          ln -s "$HOME/.local/share/epubcheck-$EPUBCHECK_VERSION/bin/epubcheck" "$HOME/.local/bin/epubcheck"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           "$HOME/.local/bin/epubcheck" --version
       - name: EPUBCheck smoke test
