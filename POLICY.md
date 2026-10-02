@@ -64,6 +64,14 @@ Every publishable book should define at least:
 
 Every ISBN-bearing artifact should contain a generated colophon/front-matter block with publisher, edition, copyright/license and the ISBNs for relevant formats.
 
+## AI-assisted development
+
+When artificial intelligence materially assists the development of a Ploos publication, that use must be disclosed in the published colophon. The standard disclosure in `templates/colophon.md` is the canonical wording for Ploos publications.
+
+AI may be used as a supporting tool for activities such as ideation, structuring, language editing and technical quality assurance. The named human author/editor remains responsible for reviewing the content and retains editorial responsibility for the published edition.
+
+AI assistance does not replace required human editorial, technical or pedagogical review.
+
 ## Source of truth
 
 Book repositories own their editorial content. This repository owns the common publishing policy, metadata conventions, central ISBN registry and reusable templates.
