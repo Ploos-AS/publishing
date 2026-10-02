@@ -28,15 +28,15 @@ M3 is feature complete and frozen. This checklist closes qualification and relea
 
 ## 4. Production evidence
 
-- [ ] Re-run the reusable publishing workflow for EduNumbers NO and EN against the qualified publishing revision.
-- [ ] Confirm both publication jobs pass.
-- [ ] Record artifact IDs, workflow run ID and publishing commit in the M3 qualification document.
-- [ ] Confirm production metadata uses only ISBNs allocated from the canonical official Ploos AS pool (publisher prefix `978-82-94310`).
+- [x] Re-run the reusable publishing workflow for EduNumbers NO and EN against the qualified publishing revision.
+- [x] Confirm both publication jobs pass.
+- [x] Record artifact IDs, workflow run ID and publishing commit in the M3 qualification document.
+- [x] Confirm production metadata uses only ISBNs allocated from the canonical official Ploos AS pool (publisher prefix `978-82-94310`).
 
 ## 5. Release
 
-- [ ] Update `docs/m3.md` qualification status to PASS only after all gates above pass.
-- [ ] Update the M3 qualification document with final evidence.
+- [x] Update `docs/m3.md` qualification status to PASS only after all gates above pass.
+- [x] Update the M3 qualification document with final evidence.
 - [ ] Run the repository validation/self-test suite at the release commit.
 - [ ] Create the M3 release tag only from the fully qualified commit.
 - [ ] Publish release notes identifying the qualified commit and evidence.
