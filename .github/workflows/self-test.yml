@@ -16,15 +16,20 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Run M1/M2 end-to-end self-test
         run: python tests/test_cli.py
-      - name: Install EPUBCheck
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Install pinned EPUBCheck
         timeout-minutes: 5
-        env:
-          DEBIAN_FRONTEND: noninteractive
         run: |
           set -euo pipefail
-          sudo timeout 180s apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update
-          sudo timeout 120s apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y --no-install-recommends epubcheck
-          epubcheck --version
+          mvn -q dependency:copy -Dartifact=org.w3c:epubcheck:5.4.0 -DoutputDirectory="$HOME/.local/share/epubcheck"
+          mkdir -p "$HOME/.local/bin"
+          printf '%s\n' '#!/bin/sh' 'exec java -jar "$HOME/.local/share/epubcheck/epubcheck-5.4.0.jar" "$@"' > "$HOME/.local/bin/epubcheck"
+          chmod +x "$HOME/.local/bin/epubcheck"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          "$HOME/.local/bin/epubcheck" --version
       - name: EPUBCheck smoke test
         run: |
           python - <<'PY'
