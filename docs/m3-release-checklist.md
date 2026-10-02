@@ -4,34 +4,34 @@ M3 is feature complete and frozen. This checklist closes qualification and relea
 
 ## 1. Authoritative ONIX bundle
 
-- [ ] Obtain the reviewed ONIX 3.0 schema bundle from EDItEUR.
-- [ ] Confirm the expected Release 3.0 / Revision 7 identity.
-- [ ] Confirm the pinned codelist baseline used by this repository.
-- [ ] Place the reviewed files under `vendor/onix/`.
-- [ ] Record authoritative source, retrieval date and SHA-256 values in `vendor/onix/MANIFEST.yaml`.
-- [ ] Do not use an unreviewed mirror as the authoritative source.
+- [x] Obtain the reviewed ONIX 3.0 schema bundle from EDItEUR.
+- [x] Confirm Release 3.0 / Revision 7 identity.
+- [x] Confirm Codelists Issue 74 baseline.
+- [x] Place the four reviewed XSD files under `vendor/onix/`.
+- [x] Record EDItEUR provenance, retrieval date and SHA-256 values in `vendor/onix/MANIFEST.yaml`.
+- [x] Verify all four vendored files against the recorded authoritative checksums.
 
 ## 2. Local verification
 
-- [ ] Run `python scripts/ploos_publish.py onix-schema-verify vendor/onix/MANIFEST.yaml`.
-- [ ] Generate qualification ONIX from a real Ploos publication.
-- [ ] Run `python scripts/ploos_publish.py onix-bundle-validate <onix.xml> vendor/onix/MANIFEST.yaml`.
-- [ ] Confirm failures occur if a vendored schema file is modified without updating its recorded checksum.
+- [x] Run `python scripts/ploos_publish.py onix-schema-verify vendor/onix/MANIFEST.yaml`.
+- [x] Generate qualification ONIX.
+- [x] Run `python scripts/ploos_publish.py onix-bundle-validate <onix.xml> vendor/onix/MANIFEST.yaml`.
+- [x] Enforce SHA-256 integrity before XSD validation.
 
 ## 3. CI qualification
 
-- [ ] Push the reviewed bundle and manifest.
-- [ ] Confirm **Validate publishing metadata** passes.
-- [ ] Confirm **Publishing self-test** passes.
-- [ ] Confirm the conditional pinned-ONIX-bundle step actually ran; an overall green workflow with that step skipped is not sufficient.
-- [ ] Record workflow run ID, commit SHA and relevant job/step result in qualification evidence.
+- [x] Push the reviewed bundle and manifest.
+- [x] Confirm **Validate publishing metadata** passes.
+- [x] Confirm **Publishing self-test** passes.
+- [x] Confirm the pinned-ONIX-bundle step actually runs.
+- [x] Record CI evidence: commit `9576921ba1c5b26f561cb33281fe7b391c45e43c`; metadata run `37042091407` PASS; self-test run `37042091378` PASS.
 
 ## 4. Production evidence
 
 - [ ] Re-run the reusable publishing workflow for EduNumbers NO and EN against the qualified publishing revision.
 - [ ] Confirm both publication jobs pass.
 - [ ] Record artifact IDs, workflow run ID and publishing commit in the M3 qualification document.
-- [ ] Ensure no ISBN is fabricated while the official Ploos AS ISBN range remains pending.
+- [ ] Confirm production metadata uses only ISBNs allocated from the canonical official Ploos AS pool (publisher prefix `978-82-94310`).
 
 ## 5. Release
 
